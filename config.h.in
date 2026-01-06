@@ -1,0 +1,7 @@
+#pragma once
+
+#define APP_NAME        "FinanceTracker"
+#define APP_VERSION     "@PROJECT_VERSION@"
+#define APP_VERSION_MAJ @PROJECT_VERSION_MAJOR@
+#define APP_VERSION_MIN @PROJECT_VERSION_MINOR@
+#define APP_VERSION_PAT @PROJECT_VERSION_PATCH@
