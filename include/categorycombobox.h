@@ -15,6 +15,7 @@ public:
     explicit CategoryComboBox(QWidget *parent = nullptr);
     
     void loadCategories(bool includeAll = false);
+    void loadSubcategories(int parentCategoryId);
     int currentCategoryId() const;
     void setCurrentCategoryId(int id);
     void clear();

@@ -62,19 +62,32 @@ void Database::close()
 bool Database::createTables()
 {
     QSqlQuery query;
-    
-    // category table
+
     if (!query.exec(R"(
         CREATE TABLE IF NOT EXISTS categories (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL UNIQUE
+            name TEXT NOT NULL,
+            parent_id INTEGER DEFAULT -1,
+            UNIQUE(name, parent_id),
+            FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE CASCADE
         )
     )")) {
         qWarning() << "Ошибка создания таблицы categories:" << query.lastError().text();
         return false;
     }
-    
-    // transaction table
+
+    query.exec("PRAGMA table_info(categories)");
+    bool hasParentId = false;
+    while (query.next()) {
+        if (query.value(1).toString() == "parent_id") {
+            hasParentId = true;
+            break;
+        }
+    }
+    if (!hasParentId) {
+        query.exec("ALTER TABLE categories ADD COLUMN parent_id INTEGER DEFAULT -1");
+    }
+
     if (!query.exec(R"(
         CREATE TABLE IF NOT EXISTS transactions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -82,21 +95,35 @@ bool Database::createTables()
             type TEXT NOT NULL,
             description TEXT,
             category_id INTEGER,
+            subcategory_id INTEGER DEFAULT -1,
             amount REAL NOT NULL,
-            FOREIGN KEY (category_id) REFERENCES categories(id)
+            FOREIGN KEY (category_id) REFERENCES categories(id),
+            FOREIGN KEY (subcategory_id) REFERENCES categories(id)
         )
     )")) {
         qWarning() << "Ошибка создания таблицы transactions:" << query.lastError().text();
         return false;
     }
-    
+
+    query.exec("PRAGMA table_info(transactions)");
+    bool hasSubcategoryId = false;
+    while (query.next()) {
+        if (query.value(1).toString() == "subcategory_id") {
+            hasSubcategoryId = true;
+            break;
+        }
+    }
+    if (!hasSubcategoryId) {
+        query.exec("ALTER TABLE transactions ADD COLUMN subcategory_id INTEGER DEFAULT -1");
+    }
+
     query.exec("CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date)");
     query.exec("CREATE INDEX IF NOT EXISTS idx_transactions_type ON transactions(type)");
     query.exec("CREATE INDEX IF NOT EXISTS idx_transactions_category ON transactions(category_id)");
-    
+    query.exec("CREATE INDEX IF NOT EXISTS idx_categories_parent ON categories(parent_id)");
+
     return true;
 }
-
 void Database::insertDefaultCategories()
 {
     QSqlQuery query;
@@ -133,25 +160,79 @@ void Database::insertDefaultCategories()
     }
 }
 
+QMap<QString, double> Database::getSubcategoryTotalsByMonth(int year, int month, int categoryId)
+{
+    QMap<QString, double> result;
+
+    QDate firstDay(year, month, 1);
+    QDate lastDay(year, month, firstDay.daysInMonth());
+
+    QSqlQuery query;
+    query.prepare(R"(
+        SELECT c.name, COALESCE(SUM(t.amount), 0)
+        FROM transactions t
+        LEFT JOIN categories c ON t.subcategory_id = c.id
+        WHERE t.date >= :fromDate AND t.date <= :toDate
+          AND t.type = 'expense'
+          AND t.category_id = :categoryId
+          AND t.subcategory_id >= 0
+        GROUP BY c.name
+    )");
+    query.bindValue(":fromDate", firstDay.toString(Qt::ISODate));
+    query.bindValue(":toDate", lastDay.toString(Qt::ISODate));
+    query.bindValue(":categoryId", categoryId);
+
+    if (query.exec()) {
+        while (query.next()) {
+            QString name = query.value(0).toString();
+            if (name.isEmpty()) name = "Без подкатегории";
+            result[name] = query.value(1).toDouble();
+        }
+    }
+
+    // Также добавляем траты без подкатегории
+    query.prepare(R"(
+        SELECT COALESCE(SUM(t.amount), 0)
+        FROM transactions t
+        WHERE t.date >= :fromDate AND t.date <= :toDate
+          AND t.type = 'expense'
+          AND t.category_id = :categoryId
+          AND (t.subcategory_id < 0 OR t.subcategory_id IS NULL)
+    )");
+    query.bindValue(":fromDate", firstDay.toString(Qt::ISODate));
+    query.bindValue(":toDate", lastDay.toString(Qt::ISODate));
+    query.bindValue(":categoryId", categoryId);
+
+    if (query.exec() && query.next()) {
+        double amount = query.value(0).toDouble();
+        if (amount > 0) {
+            result["Без подкатегории"] = amount;
+        }
+    }
+
+    return result;
+}
+
 bool Database::addTransaction(Transaction& transaction)
 {
     QSqlQuery query;
     query.prepare(R"(
-        INSERT INTO transactions (date, type, description, category_id, amount)
-        VALUES (:date, :type, :description, :category_id, :amount)
+        INSERT INTO transactions (date, type, description, category_id, subcategory_id, amount)
+        VALUES (:date, :type, :description, :category_id, :subcategory_id, :amount)
     )");
-    
+
     query.bindValue(":date", transaction.date().toString(Qt::ISODate));
     query.bindValue(":type", transaction.type() == Transaction::Type::Income ? "income" : "expense");
     query.bindValue(":description", transaction.description());
     query.bindValue(":category_id", transaction.categoryId() >= 0 ? transaction.categoryId() : QVariant());
+    query.bindValue(":subcategory_id", transaction.subcategoryId() >= 0 ? transaction.subcategoryId() : QVariant());
     query.bindValue(":amount", transaction.amount());
-    
+
     if (!query.exec()) {
         qWarning() << "Ошибка добавления транзакции:" << query.lastError().text();
         return false;
     }
-    
+
     transaction.setId(query.lastInsertId().toInt());
     emit transactionAdded(transaction);
     emit dataChanged();
@@ -204,9 +285,9 @@ bool Database::deleteTransaction(int id)
 Transaction Database::getTransaction(int id)
 {
     QSqlQuery query;
-    query.prepare("SELECT id, date, type, description, category_id, amount FROM transactions WHERE id = :id");
+    query.prepare("SELECT id, date, type, description, category_id, subcategory_id, amount FROM transactions WHERE id = :id");
     query.bindValue(":id", id);
-    
+
     if (query.exec() && query.next()) {
         return Transaction(
             query.value(0).toInt(),
@@ -214,10 +295,11 @@ Transaction Database::getTransaction(int id)
             Transaction::stringToType(query.value(2).toString()),
             query.value(3).toString(),
             query.value(4).isNull() ? -1 : query.value(4).toInt(),
-            query.value(5).toDouble()
-        );
+            query.value(5).isNull() ? -1 : query.value(5).toInt(),
+            query.value(6).toDouble()
+            );
     }
-    
+
     return Transaction();
 }
 
@@ -225,9 +307,9 @@ QList<Transaction> Database::getTransactions(const QDate& fromDate, const QDate&
                                              int categoryId, Transaction::Type type)
 {
     QList<Transaction> result;
-    
-    QString sql = "SELECT id, date, type, description, category_id, amount FROM transactions WHERE 1=1";
-    
+
+    QString sql = "SELECT id, date, type, description, category_id, subcategory_id, amount FROM transactions WHERE 1=1";
+
     if (fromDate.isValid()) {
         sql += " AND date >= :fromDate";
     }
@@ -240,12 +322,12 @@ QList<Transaction> Database::getTransactions(const QDate& fromDate, const QDate&
     if (type != Transaction::Type::All) {
         sql += " AND type = :type";
     }
-    
+
     sql += " ORDER BY date DESC, id DESC";
-    
+
     QSqlQuery query;
     query.prepare(sql);
-    
+
     if (fromDate.isValid()) {
         query.bindValue(":fromDate", fromDate.toString(Qt::ISODate));
     }
@@ -258,7 +340,7 @@ QList<Transaction> Database::getTransactions(const QDate& fromDate, const QDate&
     if (type != Transaction::Type::All) {
         query.bindValue(":type", type == Transaction::Type::Income ? "income" : "expense");
     }
-    
+
     if (query.exec()) {
         while (query.next()) {
             result.append(Transaction(
@@ -267,11 +349,12 @@ QList<Transaction> Database::getTransactions(const QDate& fromDate, const QDate&
                 Transaction::stringToType(query.value(2).toString()),
                 query.value(3).toString(),
                 query.value(4).isNull() ? -1 : query.value(4).toInt(),
-                query.value(5).toDouble()
-            ));
+                query.value(5).isNull() ? -1 : query.value(5).toInt(),
+                query.value(6).toDouble()
+                ));
         }
     }
-    
+
     return result;
 }
 
@@ -292,71 +375,110 @@ QList<Transaction> Database::getTransactionsByYear(int year, Transaction::Type t
 bool Database::addCategory(Category& category)
 {
     QSqlQuery query;
-    query.prepare("INSERT INTO categories (name) VALUES (:name)");
+    query.prepare("INSERT INTO categories (name, parent_id) VALUES (:name, :parent_id)");
     query.bindValue(":name", category.name());
-    
+    query.bindValue(":parent_id", category.parentId());
+
     if (!query.exec()) {
         qWarning() << "Ошибка добавления категории:" << query.lastError().text();
         return false;
     }
-    
+
     category.setId(query.lastInsertId().toInt());
     emit categoryAdded(category);
     return true;
 }
-
 bool Database::deleteCategory(int id)
 {
-    QSqlQuery check;
-    check.prepare("SELECT COUNT(*) FROM transactions WHERE category_id = :id");
-    check.bindValue(":id", id);
-    if (check.exec() && check.next() && check.value(0).toInt() > 0) {
-        return false;
-    }
-    
     QSqlQuery query;
+
+    query.prepare("DELETE FROM categories WHERE parent_id = :id");
+    query.bindValue(":id", id);
+    query.exec();
+
     query.prepare("DELETE FROM categories WHERE id = :id");
     query.bindValue(":id", id);
-    
+
     if (!query.exec()) {
         qWarning() << "Ошибка удаления категории:" << query.lastError().text();
         return false;
     }
-    
+
     emit categoryDeleted(id);
+    emit dataChanged();
     return true;
 }
 
 QList<Category> Database::getCategories()
 {
     QList<Category> result;
-    
-    QSqlQuery query("SELECT id, name FROM categories ORDER BY name");
+
+    QSqlQuery query("SELECT id, name, parent_id FROM categories WHERE parent_id = -1 ORDER BY name");
     while (query.next()) {
         result.append(Category(
             query.value(0).toInt(),
-            query.value(1).toString()
-        ));
+            query.value(1).toString(),
+            query.value(2).toInt()
+            ));
     }
-    
+
     return result;
 }
 
 Category Database::getCategory(int id)
 {
     QSqlQuery query;
-    query.prepare("SELECT id, name FROM categories WHERE id = :id");
+    query.prepare("SELECT id, name, parent_id FROM categories WHERE id = :id");
     query.bindValue(":id", id);
-    
+
     if (query.exec() && query.next()) {
         return Category(
             query.value(0).toInt(),
-            query.value(1).toString()
-        );
+            query.value(1).toString(),
+            query.value(2).toInt()
+            );
     }
-    
+
     return Category();
 }
+
+QList<Category> Database::getSubcategories(int parentId)
+{
+    QList<Category> result;
+
+    QSqlQuery query;
+    query.prepare("SELECT id, name, parent_id FROM categories WHERE parent_id = :parentId ORDER BY name");
+    query.bindValue(":parentId", parentId);
+
+    if (query.exec()) {
+        while (query.next()) {
+            result.append(Category(
+                query.value(0).toInt(),
+                query.value(1).toString(),
+                query.value(2).toInt()
+                ));
+        }
+    }
+
+    return result;
+}
+
+bool Database::updateCategoryName(int id, const QString& newName)
+{
+    QSqlQuery query;
+    query.prepare("UPDATE categories SET name = :name WHERE id = :id");
+    query.bindValue(":name", newName);
+    query.bindValue(":id", id);
+
+    if (!query.exec()) {
+        qWarning() << "Ошибка обновления категории:" << query.lastError().text();
+        return false;
+    }
+
+    emit dataChanged();
+    return true;
+}
+
 
 double Database::getTotalByMonth(int year, int month, Transaction::Type type)
 {

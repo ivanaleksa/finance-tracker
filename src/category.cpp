@@ -2,12 +2,14 @@
 
 Category::Category()
     : m_id(-1)
+    , m_parentId(-1)
 {
 }
 
-Category::Category(int id, const QString& name)
+Category::Category(int id, const QString& name, int parentId)
     : m_id(id)
     , m_name(name)
+    , m_parentId(parentId)
 {
 }
 

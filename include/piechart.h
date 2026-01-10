@@ -14,6 +14,7 @@ public:
     
     void setData(const QMap<QString, double>& data);
     void setTitle(const QString& title);
+    void setNoDataMessage(const QString& message);
     void clear();
 
 protected:
@@ -22,6 +23,7 @@ protected:
 private:
     QMap<QString, double> m_data;
     QString m_title;
+    QString m_noDataMessage = "Нет данных за выбранный период";
     QList<QColor> m_colors;
     
     void drawPie(QPainter& painter, const QRect& rect);

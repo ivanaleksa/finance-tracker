@@ -26,9 +26,12 @@ signals:
 private slots:
     void onTypeChanged(int index);
     void onAddClicked();
-    void onAddCategoryClicked();
+    void onCategorySettingsClicked();
+    void onSubcategorySettingsClicked();
+    void onCategoryChanged();
     void onUndoClicked(const Transaction& transaction);
     void refreshCategories();
+    void refreshSubcategories();
 
 private:
     void setupUi();
@@ -39,10 +42,12 @@ private:
     QComboBox *m_typeCombo;
     QLineEdit *m_descriptionEdit;
     CategoryComboBox *m_categoryCombo;
-    QPushButton *m_addCategoryBtn;
+    QPushButton *m_categorySettingsBtn;
+    CategoryComboBox *m_subcategoryCombo;
+    QPushButton *m_subcategorySettingsBtn;
     QDoubleSpinBox *m_amountSpin;
     QPushButton *m_addBtn;
-    
+
     UndoNotification *m_undoNotification = nullptr;
 };
 

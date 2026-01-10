@@ -30,6 +30,7 @@ set(SOURCES
     src/undonotification.cpp
     src/piechart.cpp
     src/barchart.cpp
+    src/categorymanagerdialog.cpp
 )
 
 set(HEADERS
@@ -46,6 +47,7 @@ set(HEADERS
     include/undonotification.h
     include/piechart.h
     include/barchart.h
+    include/categorymanagerdialog.h
 )
 
 add_executable(${PROJECT_NAME} WIN32

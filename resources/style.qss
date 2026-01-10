@@ -30,6 +30,18 @@ QMainWindow {
     font-size: 14px;
 }
 
+#settingsBtn {
+    background-color: #ecf0f1;
+    color: #2c3e50;
+    border: 1px solid #bdc3c7;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+#settingsBtn:hover {
+    background-color: #d5dbdb;
+}
+
 #navButton:hover {
     background-color: #34495e;
     color: #ecf0f1;

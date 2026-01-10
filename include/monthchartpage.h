@@ -21,6 +21,8 @@ public slots:
 private slots:
     void onFilterChanged();
     void onPeriodTypeChanged();
+    void onCategoryChanged();
+    void refreshCategories();
 
 private:
     void setupUi();
@@ -30,6 +32,8 @@ private:
     QLabel *m_monthLabel;
     QComboBox *m_monthCombo;
     QSpinBox *m_yearSpin;
+    QLabel *m_categoryLabel;
+    QComboBox *m_categoryCombo;
     PieChart *m_chart;
 };
 

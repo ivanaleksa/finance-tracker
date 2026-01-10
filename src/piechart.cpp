@@ -22,6 +22,12 @@ void PieChart::setData(const QMap<QString, double>& data)
     update();
 }
 
+void PieChart::setNoDataMessage(const QString& message)
+{
+    m_noDataMessage = message;
+    update();
+}
+
 void PieChart::setTitle(const QString& title)
 {
     m_title = title;
@@ -58,7 +64,7 @@ void PieChart::paintEvent(QPaintEvent *event)
         QFont msgFont = font();
         msgFont.setPointSize(12);
         painter.setFont(msgFont);
-        painter.drawText(rect(), Qt::AlignCenter, "Нет данных за выбранный период");
+        painter.drawText(rect(), Qt::AlignCenter, m_noDataMessage);
         return;
     }
 

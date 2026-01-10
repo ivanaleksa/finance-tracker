@@ -35,6 +35,9 @@ public:
     bool deleteCategory(int id);
     QList<Category> getCategories();
     Category getCategory(int id);
+    QList<Category> getSubcategories(int parentId);
+    bool updateCategoryName(int id, const QString& newName);
+    QMap<QString, double> getSubcategoryTotalsByMonth(int year, int month, int categoryId);
     
     // statistic
     double getTotalByMonth(int year, int month, Transaction::Type type);

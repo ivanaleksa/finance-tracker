@@ -57,6 +57,33 @@ void CategoryComboBox::loadCategories(bool includeAll)
     }
 }
 
+void CategoryComboBox::loadSubcategories(int parentCategoryId)
+{
+    m_sourceModel->clear();
+
+    if (parentCategoryId < 0) {
+        m_lineEdit->clear();
+        m_lineEdit->setPlaceholderText("Сначала выберите категорию");
+        return;
+    }
+
+    m_lineEdit->setPlaceholderText("Выберите подкатегорию...");
+
+    QStandardItem *emptyItem = new QStandardItem();
+    emptyItem->setData(-1, Qt::UserRole);
+    m_sourceModel->appendRow(emptyItem);
+
+    QList<Category> subcategories = Database::instance().getSubcategories(parentCategoryId);
+    for (const Category& cat : subcategories) {
+        QStandardItem *item = new QStandardItem(cat.name());
+        item->setData(cat.id(), Qt::UserRole);
+        m_sourceModel->appendRow(item);
+    }
+
+    setCurrentIndex(0);
+    m_lineEdit->setText(m_sourceModel->item(0)->text());
+}
+
 int CategoryComboBox::currentCategoryId() const
 {
     QString text = m_lineEdit->text().trimmed();
