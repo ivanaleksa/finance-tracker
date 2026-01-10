@@ -49,6 +49,7 @@ void AddTransactionPage::setupUi()
     m_typeCombo = new QComboBox(this);
     m_typeCombo->addItem("Расход", static_cast<int>(Transaction::Type::Expense));
     m_typeCombo->addItem("Доход", static_cast<int>(Transaction::Type::Income));
+    m_typeCombo->addItem("Сбережения", static_cast<int>(Transaction::Type::Savings));
     m_typeCombo->setMinimumWidth(200);
     connect(m_typeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &AddTransactionPage::onTypeChanged);
@@ -145,10 +146,21 @@ void AddTransactionPage::onTypeChanged(int index)
     Transaction::Type type = static_cast<Transaction::Type>(m_typeCombo->currentData().toInt());
 
     bool isExpense = (type == Transaction::Type::Expense);
+    bool isSavings = (type == Transaction::Type::Savings);
+
+    m_descriptionEdit->setEnabled(!isSavings);
+    if (isSavings) {
+        m_descriptionEdit->clear();
+    }
+
     m_categoryCombo->setEnabled(isExpense);
     m_categorySettingsBtn->setEnabled(isExpense);
-    m_subcategoryCombo->setEnabled(isExpense);
-    m_subcategorySettingsBtn->setEnabled(isExpense);
+    m_subcategoryCombo->setEnabled(false);
+    m_subcategorySettingsBtn->setEnabled(false);
+
+    if (isExpense) {
+        onCategoryChanged();
+    }
 }
 
 void AddTransactionPage::onCategoryChanged()

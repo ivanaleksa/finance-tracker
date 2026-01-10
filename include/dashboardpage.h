@@ -32,6 +32,7 @@ private:
     QLabel *m_balanceValue;
     QLabel *m_carryoverValue;
     QLabel *m_totalBalanceValue;
+    QLabel *m_savingsValue;
 };
 
 #endif // DASHBOARDPAGE_H

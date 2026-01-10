@@ -11,6 +11,7 @@ public:
     enum class Type {
         Income,
         Expense,
+        Savings,
         All
     };
 

@@ -67,6 +67,7 @@ void TransactionListPage::setupUi()
     m_typeCombo->addItem("Все", static_cast<int>(Transaction::Type::All));
     m_typeCombo->addItem("Расходы", static_cast<int>(Transaction::Type::Expense));
     m_typeCombo->addItem("Доходы", static_cast<int>(Transaction::Type::Income));
+    m_typeCombo->addItem("Сбережения", static_cast<int>(Transaction::Type::Savings));
     connect(m_typeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &TransactionListPage::onFilterChanged);
     filterLayout->addWidget(m_typeCombo);
@@ -150,10 +151,24 @@ void TransactionListPage::loadTransactions()
         dateItem->setData(Qt::UserRole, t.id());
         m_table->setItem(i, 0, dateItem);
         
-        QString typeStr = t.type() == Transaction::Type::Income ? "Доход" : "Расход";
+        QString typeStr;
+        QColor typeColor;
+        switch (t.type()) {
+        case Transaction::Type::Income:
+            typeStr = "Доход";
+            typeColor = QColor("#27ae60");
+            break;
+        case Transaction::Type::Savings:
+            typeStr = "Сбережения";
+            typeColor = QColor("#8e44ad");
+            break;
+        default:
+            typeStr = "Расход";
+            typeColor = QColor("#e74c3c");
+            break;
+        }
         QTableWidgetItem *typeItem = new QTableWidgetItem(typeStr);
-        typeItem->setForeground(t.type() == Transaction::Type::Income ? 
-            QColor("#27ae60") : QColor("#e74c3c"));
+        typeItem->setForeground(typeColor);
         m_table->setItem(i, 1, typeItem);
         
         m_table->setItem(i, 2, new QTableWidgetItem(t.description()));
@@ -170,8 +185,7 @@ void TransactionListPage::loadTransactions()
         QString amountStr = QString("%1 ₽").arg(t.amount(), 0, 'f', 2);
         QTableWidgetItem *amountItem = new QTableWidgetItem(amountStr);
         amountItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        amountItem->setForeground(t.type() == Transaction::Type::Income ? 
-            QColor("#27ae60") : QColor("#e74c3c"));
+        amountItem->setForeground(typeColor);
         m_table->setItem(i, 4, amountItem);
         
         QPushButton *deleteBtn = new QPushButton("🗑", this);

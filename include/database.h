@@ -45,6 +45,8 @@ public:
     QMap<QString, double> getCategoryTotalsByMonth(int year, int month, Transaction::Type type);
     QMap<int, double> getMonthlyTotals(int year, Transaction::Type type);
     double getBalanceUpToMonth(int year, int month);
+    double getSavingsByMonth(int year, int month);
+    QMap<int, double> getMonthlySavings(int year);
 
 signals:
     void transactionAdded(const Transaction& transaction);

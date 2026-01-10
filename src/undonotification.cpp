@@ -50,7 +50,18 @@ void UndoNotification::showNotification(const Transaction& transaction, const QS
 {
     m_lastTransaction = transaction;
     
-    QString typeStr = transaction.type() == Transaction::Type::Income ? "Доход" : "Расход";
+    QString typeStr;
+    switch (transaction.type()) {
+    case Transaction::Type::Income:
+        typeStr = "Доход";
+        break;
+    case Transaction::Type::Savings:
+        typeStr = "Сбережения";
+        break;
+    default:
+        typeStr = "Расход";
+        break;
+    }
     QString message = QString("%1: %2 ₽")
         .arg(typeStr)
         .arg(transaction.amount(), 0, 'f', 2);

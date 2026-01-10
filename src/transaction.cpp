@@ -35,6 +35,7 @@ QString Transaction::typeToString(Type type)
     switch (type) {
     case Type::Income: return "Доход";
     case Type::Expense: return "Расход";
+    case Type::Savings: return "Сбережения";
     case Type::All: return "Все";
     }
     return QString();
@@ -44,5 +45,6 @@ Transaction::Type Transaction::stringToType(const QString& str)
 {
     if (str == "Доход" || str == "income") return Type::Income;
     if (str == "Расход" || str == "expense") return Type::Expense;
+    if (str == "Сбережения" || str == "savings") return Type::Savings;
     return Type::All;
 }

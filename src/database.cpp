@@ -190,7 +190,6 @@ QMap<QString, double> Database::getSubcategoryTotalsByMonth(int year, int month,
         }
     }
 
-    // Также добавляем траты без подкатегории
     query.prepare(R"(
         SELECT COALESCE(SUM(t.amount), 0)
         FROM transactions t
@@ -222,7 +221,8 @@ bool Database::addTransaction(Transaction& transaction)
     )");
 
     query.bindValue(":date", transaction.date().toString(Qt::ISODate));
-    query.bindValue(":type", transaction.type() == Transaction::Type::Income ? "income" : "expense");
+    query.bindValue(":type", transaction.type() == Transaction::Type::Income ? "income" :
+                                 (transaction.type() == Transaction::Type::Savings ? "savings" : "expense"));
     query.bindValue(":description", transaction.description());
     query.bindValue(":category_id", transaction.categoryId() >= 0 ? transaction.categoryId() : QVariant());
     query.bindValue(":subcategory_id", transaction.subcategoryId() >= 0 ? transaction.subcategoryId() : QVariant());
@@ -338,7 +338,13 @@ QList<Transaction> Database::getTransactions(const QDate& fromDate, const QDate&
         query.bindValue(":categoryId", categoryId);
     }
     if (type != Transaction::Type::All) {
-        query.bindValue(":type", type == Transaction::Type::Income ? "income" : "expense");
+        QString typeStr;
+        switch (type) {
+        case Transaction::Type::Income: typeStr = "income"; break;
+        case Transaction::Type::Savings: typeStr = "savings"; break;
+        default: typeStr = "expense"; break;
+        }
+        query.bindValue(":type", typeStr);
     }
 
     if (query.exec()) {
@@ -578,25 +584,72 @@ QMap<int, double> Database::getMonthlyTotals(int year, Transaction::Type type)
 double Database::getBalanceUpToMonth(int year, int month)
 {
     QDate endDate(year, month, 1);
-    endDate = endDate.addDays(-1); // the last day of the previous month
-    
+    endDate = endDate.addDays(-1);
+
     if (!endDate.isValid() || endDate < QDate(2000, 1, 1)) {
         return 0.0;
     }
-    
+
     QSqlQuery query;
     query.prepare(R"(
-        SELECT 
+        SELECT
             COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) -
-            COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0)
-        FROM transactions 
+            COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) -
+            COALESCE(SUM(CASE WHEN type = 'savings' THEN amount ELSE 0 END), 0)
+        FROM transactions
         WHERE date <= :endDate
     )");
     query.bindValue(":endDate", endDate.toString(Qt::ISODate));
-    
+
     if (query.exec() && query.next()) {
         return query.value(0).toDouble();
     }
-    
+
     return 0.0;
+}
+
+double Database::getSavingsByMonth(int year, int month)
+{
+    QDate firstDay(year, month, 1);
+    QDate lastDay(year, month, firstDay.daysInMonth());
+
+    QSqlQuery query;
+    query.prepare(R"(
+        SELECT COALESCE(SUM(amount), 0) FROM transactions
+        WHERE date >= :fromDate AND date <= :toDate AND type = 'savings'
+    )");
+    query.bindValue(":fromDate", firstDay.toString(Qt::ISODate));
+    query.bindValue(":toDate", lastDay.toString(Qt::ISODate));
+
+    if (query.exec() && query.next()) {
+        return query.value(0).toDouble();
+    }
+
+    return 0.0;
+}
+
+QMap<int, double> Database::getMonthlySavings(int year)
+{
+    QMap<int, double> result;
+
+    for (int i = 1; i <= 12; ++i) {
+        result[i] = 0.0;
+    }
+
+    QSqlQuery query;
+    query.prepare(R"(
+        SELECT CAST(strftime('%m', date) AS INTEGER) as month, COALESCE(SUM(amount), 0)
+        FROM transactions
+        WHERE strftime('%Y', date) = :year AND type = 'savings'
+        GROUP BY month
+    )");
+    query.bindValue(":year", QString::number(year));
+
+    if (query.exec()) {
+        while (query.next()) {
+            result[query.value(0).toInt()] = query.value(1).toDouble();
+        }
+    }
+
+    return result;
 }

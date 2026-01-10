@@ -68,6 +68,10 @@ void DashboardPage::setupUi()
     // month balance
     QWidget *balanceCard = createStatCard("Баланс месяца", m_balanceValue, "#3498db");
     cardsLayout->addWidget(balanceCard, 0, 2);
+
+    // savings
+    QWidget *savingsCard = createStatCard("Сбережения за месяц", m_savingsValue, "#8e44ad");
+    cardsLayout->addWidget(savingsCard, 1, 1);
     
     // residual
     QWidget *carryoverCard = createStatCard("Остаток с прошлых месяцев", m_carryoverValue, "#9b59b6");
@@ -75,7 +79,7 @@ void DashboardPage::setupUi()
     
     // total balance
     QWidget *totalCard = createStatCard("Общий баланс", m_totalBalanceValue, "#f39c12");
-    cardsLayout->addWidget(totalCard, 1, 1, 1, 2);
+    cardsLayout->addWidget(totalCard, 1, 2);
     
     mainLayout->addLayout(cardsLayout);
     mainLayout->addStretch();
@@ -117,34 +121,33 @@ void DashboardPage::updateStatistics()
 {
     int year = m_yearSpin->value();
     int month = m_monthCombo->currentData().toInt();
-    
+
     double income = Database::instance().getTotalByMonth(year, month, Transaction::Type::Income);
     double expense = Database::instance().getTotalByMonth(year, month, Transaction::Type::Expense);
-    double balance = income - expense;
+    double savings = Database::instance().getSavingsByMonth(year, month);
+    double balance = income - expense - savings;
     double carryover = Database::instance().getBalanceUpToMonth(year, month);
     double totalBalance = carryover + balance;
-    
+
     m_incomeValue->setText(QString("%1 ₽").arg(income, 0, 'f', 2));
     m_expenseValue->setText(QString("%1 ₽").arg(expense, 0, 'f', 2));
-    
-    // month balance
+    m_savingsValue->setText(QString("%1 ₽").arg(savings, 0, 'f', 2));
+
     m_balanceValue->setText(QString("%1%2 ₽")
-        .arg(balance >= 0 ? "+" : "")
-        .arg(balance, 0, 'f', 2));
+                                .arg(balance >= 0 ? "+" : "")
+                                .arg(balance, 0, 'f', 2));
     m_balanceValue->setStyleSheet(QString("color: %1; font-size: 28px; font-weight: bold;")
-        .arg(balance >= 0 ? "#27ae60" : "#e74c3c"));
-    
-    // residual
+                                      .arg(balance >= 0 ? "#27ae60" : "#e74c3c"));
+
     m_carryoverValue->setText(QString("%1%2 ₽")
-        .arg(carryover >= 0 ? "+" : "")
-        .arg(carryover, 0, 'f', 2));
+                                  .arg(carryover >= 0 ? "+" : "")
+                                  .arg(carryover, 0, 'f', 2));
     m_carryoverValue->setStyleSheet(QString("color: %1; font-size: 28px; font-weight: bold;")
-        .arg(carryover >= 0 ? "#9b59b6" : "#e74c3c"));
-    
-    // total balance
+                                        .arg(carryover >= 0 ? "#9b59b6" : "#e74c3c"));
+
     m_totalBalanceValue->setText(QString("%1%2 ₽")
-        .arg(totalBalance >= 0 ? "+" : "")
-        .arg(totalBalance, 0, 'f', 2));
+                                     .arg(totalBalance >= 0 ? "+" : "")
+                                     .arg(totalBalance, 0, 'f', 2));
     m_totalBalanceValue->setStyleSheet(QString("color: %1; font-size: 32px; font-weight: bold;")
-        .arg(totalBalance >= 0 ? "#f39c12" : "#e74c3c"));
+                                           .arg(totalBalance >= 0 ? "#f39c12" : "#e74c3c"));
 }

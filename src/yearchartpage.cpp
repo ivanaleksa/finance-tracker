@@ -35,6 +35,7 @@ void YearChartPage::setupUi()
     m_typeCombo = new QComboBox(this);
     m_typeCombo->addItem("Расходы", static_cast<int>(Transaction::Type::Expense));
     m_typeCombo->addItem("Доходы", static_cast<int>(Transaction::Type::Income));
+    m_typeCombo->addItem("Сбережения", static_cast<int>(Transaction::Type::Savings));
     connect(m_typeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &YearChartPage::onFilterChanged);
     filterLayout->addWidget(m_typeCombo);
@@ -74,11 +75,33 @@ void YearChartPage::updateChart()
 {
     int year = m_yearSpin->value();
     Transaction::Type type = static_cast<Transaction::Type>(m_typeCombo->currentData().toInt());
-    
-    QMap<int, double> monthlyTotals = Database::instance().getMonthlyTotals(year, type);
-    
-    QString typeStr = type == Transaction::Type::Income ? "Доходы" : "Расходы";
+
+    QMap<int, double> monthlyTotals;
+
+    if (type == Transaction::Type::Savings) {
+        monthlyTotals = Database::instance().getMonthlySavings(year);
+    } else {
+        monthlyTotals = Database::instance().getMonthlyTotals(year, type);
+    }
+
+    QString typeStr;
+    QColor barColor;
+    switch (type) {
+    case Transaction::Type::Income:
+        typeStr = "Доходы";
+        barColor = QColor("#27ae60");
+        break;
+    case Transaction::Type::Savings:
+        typeStr = "Сбережения";
+        barColor = QColor("#8e44ad");
+        break;
+    default:
+        typeStr = "Расходы";
+        barColor = QColor("#e74c3c");
+        break;
+    }
+
     m_chart->setTitle(QString("%1 за %2 год").arg(typeStr, QString::number(year)));
-    m_chart->setBarColor(type == Transaction::Type::Income ? QColor("#27ae60") : QColor("#e74c3c"));
+    m_chart->setBarColor(barColor);
     m_chart->setData(monthlyTotals);
 }
