@@ -57,6 +57,38 @@ QMainWindow {
     font-size: 11px;
 }
 
+/* Mode Switcher (segmented control) */
+#modeSwitcher {
+    background-color: #1a252f;
+    border-radius: 8px;
+}
+
+#modeButton {
+    background-color: transparent;
+    color: #7f8c8d;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+#modeButton:hover {
+    color: #bdc3c7;
+}
+
+#modeButton:checked {
+    background-color: #3498db;
+    color: white;
+}
+
+/* Placeholder text for pages in development */
+#placeholderText {
+    color: #7f8c8d;
+    font-size: 24px;
+    font-weight: bold;
+}
+
 /* Страницы */
 #pageStack {
     background-color: #f5f6fa;
