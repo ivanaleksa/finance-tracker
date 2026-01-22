@@ -31,6 +31,16 @@ set(SOURCES
     src/piechart.cpp
     src/barchart.cpp
     src/categorymanagerdialog.cpp
+    # Investment models
+    src/investmentcategory.cpp
+    src/country.cpp
+    src/currency.cpp
+    src/snapshotposition.cpp
+    src/snapshot.cpp
+    src/withdrawal.cpp
+    # Investment pages
+    src/withdrawalspage.cpp
+    src/withdrawalundonotification.cpp
 )
 
 set(HEADERS
@@ -48,6 +58,16 @@ set(HEADERS
     include/piechart.h
     include/barchart.h
     include/categorymanagerdialog.h
+    # Investment models
+    include/investmentcategory.h
+    include/country.h
+    include/currency.h
+    include/snapshotposition.h
+    include/snapshot.h
+    include/withdrawal.h
+    # Investment pages
+    include/withdrawalspage.h
+    include/withdrawalundonotification.h
 )
 
 add_executable(${PROJECT_NAME} WIN32

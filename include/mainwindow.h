@@ -12,6 +12,7 @@ class AddTransactionPage;
 class TransactionListPage;
 class MonthChartPage;
 class YearChartPage;
+class WithdrawalsPage;
 
 class MainWindow : public QMainWindow
 {
@@ -32,7 +33,10 @@ private slots:
     void showTransactionList();
     void showMonthChart();
     void showYearChart();
+
+    // Investments mode slots
     void showInvestmentsPlaceholder();
+    void showWithdrawals();
 
     void switchToReportingMode();
     void switchToInvestmentsMode();
@@ -72,8 +76,9 @@ private:
     QPushButton *m_btnYearChart;
     QPushButton *m_currentButton = nullptr;
 
-    // Investments mode buttons (placeholder for now)
+    // Investments mode buttons
     QPushButton *m_btnInvestmentsPlaceholder;
+    QPushButton *m_btnWithdrawals;
 
     // Reporting pages
     DashboardPage *m_dashboardPage;
@@ -84,6 +89,7 @@ private:
 
     // Investments pages
     QWidget *m_investmentsPlaceholderPage;
+    WithdrawalsPage *m_withdrawalsPage;
 };
 
 #endif // MAINWINDOW_H

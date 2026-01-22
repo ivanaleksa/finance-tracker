@@ -7,6 +7,12 @@
 #include <QDate>
 #include "transaction.h"
 #include "category.h"
+#include "investmentcategory.h"
+#include "country.h"
+#include "currency.h"
+#include "snapshot.h"
+#include "snapshotposition.h"
+#include "withdrawal.h"
 
 class Database : public QObject
 {
@@ -14,10 +20,10 @@ class Database : public QObject
 
 public:
     static Database& instance();
-    
+
     bool initialize();
     void close();
-    
+
     // transactions
     bool addTransaction(Transaction& transaction);
     bool updateTransaction(const Transaction& transaction);
@@ -29,8 +35,8 @@ public:
                                        Transaction::Type type = Transaction::Type::All);
     QList<Transaction> getTransactionsByMonth(int year, int month, Transaction::Type type);
     QList<Transaction> getTransactionsByYear(int year, Transaction::Type type);
-    
-    // categories
+
+    // categories (for transactions)
     bool addCategory(Category& category);
     bool deleteCategory(int id);
     QList<Category> getCategories();
@@ -38,7 +44,8 @@ public:
     QList<Category> getSubcategories(int parentId);
     bool updateCategoryName(int id, const QString& newName);
     QMap<QString, double> getSubcategoryTotalsByMonth(int year, int month, int categoryId);
-    
+    int getOrCreateInvestmentIncomeCategory();
+
     // statistic
     double getTotalByMonth(int year, int month, Transaction::Type type);
     double getTotalByYear(int year, Transaction::Type type);
@@ -47,6 +54,50 @@ public:
     double getBalanceUpToMonth(int year, int month);
     double getSavingsByMonth(int year, int month);
     QMap<int, double> getMonthlySavings(int year);
+    double getTotalSavings();
+
+    // ========== INVESTMENTS ==========
+
+    // Investment categories
+    bool addInvestmentCategory(InvestmentCategory& category);
+    bool updateInvestmentCategory(int id, const QString& newName);
+    bool deleteInvestmentCategory(int id);
+    QList<InvestmentCategory> getInvestmentCategories();
+    InvestmentCategory getInvestmentCategory(int id);
+
+    // Countries
+    bool addCountry(Country& country);
+    bool updateCountry(int id, const QString& newName);
+    bool deleteCountry(int id);
+    QList<Country> getCountries();
+    Country getCountry(int id);
+
+    // Currencies
+    bool addCurrency(Currency& currency);
+    bool updateCurrency(int id, const QString& code, const QString& name);
+    bool deleteCurrency(int id);
+    QList<Currency> getCurrencies();
+    Currency getCurrency(int id);
+    Currency getCurrencyByCode(const QString& code);
+
+    // Snapshots
+    bool addSnapshot(Snapshot& snapshot);
+    bool deleteSnapshot(int id);
+    Snapshot getSnapshot(int id);
+    Snapshot getLatestSnapshot();
+    Snapshot getLatestSnapshotBefore(const QDate& date);
+    QList<Snapshot> getAllSnapshots();
+    QMap<QDate, double> getWeeklyPortfolioHistory(int weeks = 52);
+
+    // Withdrawals
+    bool addWithdrawal(Withdrawal& withdrawal);
+    bool deleteWithdrawal(int id);
+    QList<Withdrawal> getWithdrawals();
+    Withdrawal getWithdrawal(int id);
+    double getTotalWithdrawals();
+
+    // Portfolio statistics
+    double getPortfolioReturn();
 
 signals:
     void transactionAdded(const Transaction& transaction);
@@ -56,15 +107,24 @@ signals:
     void categoryDeleted(int id);
     void dataChanged();
 
+    // Investment signals
+    void investmentDataChanged();
+    void snapshotAdded(const Snapshot& snapshot);
+    void snapshotDeleted(int id);
+    void withdrawalAdded(const Withdrawal& withdrawal);
+    void withdrawalDeleted(int id);
+
 private:
     Database();
     ~Database();
     Database(const Database&) = delete;
     Database& operator=(const Database&) = delete;
-    
+
     bool createTables();
+    bool createInvestmentTables();
     void insertDefaultCategories();
-    
+    void insertDefaultCurrencies();
+
     QSqlDatabase m_db;
 };
 

@@ -4,6 +4,7 @@
 #include "transactionlistpage.h"
 #include "monthchartpage.h"
 #include "yearchartpage.h"
+#include "withdrawalspage.h"
 #include "database.h"
 #include "config.h"
 #include <QFile>
@@ -155,6 +156,12 @@ void MainWindow::createInvestmentsButtons()
     connect(m_btnInvestmentsPlaceholder, &QPushButton::clicked, this, &MainWindow::showInvestmentsPlaceholder);
     layout->addWidget(m_btnInvestmentsPlaceholder);
 
+    m_btnWithdrawals = new QPushButton("💸 Выводы", m_investmentsButtonsContainer);
+    m_btnWithdrawals->setObjectName("navButton");
+    m_btnWithdrawals->setCursor(Qt::PointingHandCursor);
+    connect(m_btnWithdrawals, &QPushButton::clicked, this, &MainWindow::showWithdrawals);
+    layout->addWidget(m_btnWithdrawals);
+
     // Hide by default
     m_investmentsButtonsContainer->hide();
 }
@@ -177,7 +184,7 @@ void MainWindow::createPages()
     m_pageStack->addWidget(m_monthChartPage);
     m_pageStack->addWidget(m_yearChartPage);
 
-    // Investments placeholder page
+    // Investments placeholder page (for Portfolio - will be implemented later)
     m_investmentsPlaceholderPage = new QWidget(this);
     m_investmentsPlaceholderPage->setObjectName("pageContent");
     QVBoxLayout *placeholderLayout = new QVBoxLayout(m_investmentsPlaceholderPage);
@@ -189,6 +196,10 @@ void MainWindow::createPages()
     placeholderLayout->addWidget(placeholderLabel);
 
     m_pageStack->addWidget(m_investmentsPlaceholderPage);
+
+    // Withdrawals page
+    m_withdrawalsPage = new WithdrawalsPage(this);
+    m_pageStack->addWidget(m_withdrawalsPage);
 
     // db linking
     connect(&Database::instance(), &Database::dataChanged, m_dashboardPage, &DashboardPage::refreshData);
@@ -282,6 +293,13 @@ void MainWindow::showInvestmentsPlaceholder()
 {
     m_pageStack->setCurrentWidget(m_investmentsPlaceholderPage);
     setActiveButton(m_btnInvestmentsPlaceholder);
+}
+
+void MainWindow::showWithdrawals()
+{
+    m_pageStack->setCurrentWidget(m_withdrawalsPage);
+    setActiveButton(m_btnWithdrawals);
+    m_withdrawalsPage->refreshData();
 }
 
 void MainWindow::loadStyleSheet()
