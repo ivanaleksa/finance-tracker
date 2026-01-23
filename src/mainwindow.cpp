@@ -5,6 +5,7 @@
 #include "monthchartpage.h"
 #include "yearchartpage.h"
 #include "withdrawalspage.h"
+#include "portfoliopage.h"
 #include "database.h"
 #include "config.h"
 #include <QFile>
@@ -150,11 +151,11 @@ void MainWindow::createInvestmentsButtons()
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(5);
 
-    m_btnInvestmentsPlaceholder = new QPushButton("💼 Портфель", m_investmentsButtonsContainer);
-    m_btnInvestmentsPlaceholder->setObjectName("navButton");
-    m_btnInvestmentsPlaceholder->setCursor(Qt::PointingHandCursor);
-    connect(m_btnInvestmentsPlaceholder, &QPushButton::clicked, this, &MainWindow::showInvestmentsPlaceholder);
-    layout->addWidget(m_btnInvestmentsPlaceholder);
+    m_btnPortfolio = new QPushButton("💼 Портфель", m_investmentsButtonsContainer);
+    m_btnPortfolio->setObjectName("navButton");
+    m_btnPortfolio->setCursor(Qt::PointingHandCursor);
+    connect(m_btnPortfolio, &QPushButton::clicked, this, &MainWindow::showPortfolio);
+    layout->addWidget(m_btnPortfolio);
 
     m_btnWithdrawals = new QPushButton("💸 Выводы", m_investmentsButtonsContainer);
     m_btnWithdrawals->setObjectName("navButton");
@@ -184,18 +185,9 @@ void MainWindow::createPages()
     m_pageStack->addWidget(m_monthChartPage);
     m_pageStack->addWidget(m_yearChartPage);
 
-    // Investments placeholder page (for Portfolio - will be implemented later)
-    m_investmentsPlaceholderPage = new QWidget(this);
-    m_investmentsPlaceholderPage->setObjectName("pageContent");
-    QVBoxLayout *placeholderLayout = new QVBoxLayout(m_investmentsPlaceholderPage);
-    placeholderLayout->setAlignment(Qt::AlignCenter);
-
-    QLabel *placeholderLabel = new QLabel("Раздел в разработке", m_investmentsPlaceholderPage);
-    placeholderLabel->setObjectName("placeholderText");
-    placeholderLabel->setAlignment(Qt::AlignCenter);
-    placeholderLayout->addWidget(placeholderLabel);
-
-    m_pageStack->addWidget(m_investmentsPlaceholderPage);
+    // Portfolio page
+    m_portfolioPage = new PortfolioPage(this);
+    m_pageStack->addWidget(m_portfolioPage);
 
     // Withdrawals page
     m_withdrawalsPage = new WithdrawalsPage(this);
@@ -252,7 +244,7 @@ void MainWindow::switchToReportingMode()
 void MainWindow::switchToInvestmentsMode()
 {
     setActiveMode(InvestmentsMode);
-    showInvestmentsPlaceholder();
+    showPortfolio();
 }
 
 void MainWindow::showDashboard()
@@ -289,10 +281,11 @@ void MainWindow::showYearChart()
     m_yearChartPage->refreshChart();
 }
 
-void MainWindow::showInvestmentsPlaceholder()
+void MainWindow::showPortfolio()
 {
-    m_pageStack->setCurrentWidget(m_investmentsPlaceholderPage);
-    setActiveButton(m_btnInvestmentsPlaceholder);
+    m_pageStack->setCurrentWidget(m_portfolioPage);
+    setActiveButton(m_btnPortfolio);
+    m_portfolioPage->refreshData();
 }
 
 void MainWindow::showWithdrawals()

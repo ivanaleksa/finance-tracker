@@ -57,6 +57,11 @@ bool Database::initialize()
     // default currencies
     insertDefaultCurrencies();
 
+    // portfolio tables
+    if (!createPortfolioTables()) {
+        return false;
+    }
+
     return true;
 }
 
@@ -1421,4 +1426,463 @@ double Database::getPortfolioReturn()
 
     // Return = (Current + Withdrawals - Savings) / Savings * 100
     return (currentValue + totalWithdrawals - totalSavings) / totalSavings * 100.0;
+}
+
+// ========== LIVE PORTFOLIO ==========
+
+bool Database::createPortfolioTables()
+{
+    QSqlQuery query;
+
+    // Portfolio assets table
+    if (!query.exec(R"(
+        CREATE TABLE IF NOT EXISTS portfolio_assets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            category_id INTEGER,
+            country_id INTEGER,
+            currency_id INTEGER NOT NULL,
+            current_price REAL NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            is_active INTEGER NOT NULL DEFAULT 1,
+            FOREIGN KEY (category_id) REFERENCES investment_categories(id),
+            FOREIGN KEY (country_id) REFERENCES countries(id),
+            FOREIGN KEY (currency_id) REFERENCES currencies(id)
+        )
+    )")) {
+        qWarning() << "Error creating portfolio_assets:" << query.lastError().text();
+        return false;
+    }
+
+    // Asset operations table
+    if (!query.exec(R"(
+        CREATE TABLE IF NOT EXISTS asset_operations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            asset_id INTEGER NOT NULL,
+            date TEXT NOT NULL,
+            type TEXT NOT NULL CHECK(type IN ('buy', 'sell')),
+            quantity REAL NOT NULL,
+            price REAL NOT NULL,
+            commission REAL DEFAULT 0,
+            comment TEXT,
+            created_at TEXT NOT NULL,
+            FOREIGN KEY (asset_id) REFERENCES portfolio_assets(id) ON DELETE CASCADE
+        )
+    )")) {
+        qWarning() << "Error creating asset_operations:" << query.lastError().text();
+        return false;
+    }
+
+    // Indexes
+    query.exec("CREATE INDEX IF NOT EXISTS idx_portfolio_assets_active ON portfolio_assets(is_active)");
+    query.exec("CREATE INDEX IF NOT EXISTS idx_asset_operations_asset ON asset_operations(asset_id)");
+    query.exec("CREATE INDEX IF NOT EXISTS idx_asset_operations_date ON asset_operations(date)");
+
+    return true;
+}
+
+// ========== PORTFOLIO ASSETS ==========
+
+bool Database::addPortfolioAsset(PortfolioAsset& asset)
+{
+    QSqlQuery query;
+    QDateTime now = QDateTime::currentDateTime();
+
+    query.prepare(R"(
+        INSERT INTO portfolio_assets (name, category_id, country_id, currency_id, current_price, created_at, updated_at, is_active)
+        VALUES (:name, :category_id, :country_id, :currency_id, :current_price, :created_at, :updated_at, :is_active)
+    )");
+    query.bindValue(":name", asset.name());
+    query.bindValue(":category_id", asset.categoryId() >= 0 ? asset.categoryId() : QVariant());
+    query.bindValue(":country_id", asset.countryId() >= 0 ? asset.countryId() : QVariant());
+    query.bindValue(":currency_id", asset.currencyId());
+    query.bindValue(":current_price", asset.currentPrice());
+    query.bindValue(":created_at", now.toString(Qt::ISODate));
+    query.bindValue(":updated_at", now.toString(Qt::ISODate));
+    query.bindValue(":is_active", asset.isActive() ? 1 : 0);
+
+    if (!query.exec()) {
+        qWarning() << "Error adding portfolio asset:" << query.lastError().text();
+        return false;
+    }
+
+    asset.setId(query.lastInsertId().toInt());
+    asset.setCreatedAt(now);
+    asset.setUpdatedAt(now);
+
+    emit portfolioAssetAdded(asset);
+    emit portfolioDataChanged();
+    return true;
+}
+
+bool Database::updatePortfolioAsset(const PortfolioAsset& asset)
+{
+    QSqlQuery query;
+    QDateTime now = QDateTime::currentDateTime();
+
+    query.prepare(R"(
+        UPDATE portfolio_assets
+        SET name = :name, category_id = :category_id, country_id = :country_id,
+            currency_id = :currency_id, current_price = :current_price,
+            updated_at = :updated_at, is_active = :is_active
+        WHERE id = :id
+    )");
+    query.bindValue(":id", asset.id());
+    query.bindValue(":name", asset.name());
+    query.bindValue(":category_id", asset.categoryId() >= 0 ? asset.categoryId() : QVariant());
+    query.bindValue(":country_id", asset.countryId() >= 0 ? asset.countryId() : QVariant());
+    query.bindValue(":currency_id", asset.currencyId());
+    query.bindValue(":current_price", asset.currentPrice());
+    query.bindValue(":updated_at", now.toString(Qt::ISODate));
+    query.bindValue(":is_active", asset.isActive() ? 1 : 0);
+
+    if (!query.exec()) {
+        qWarning() << "Error updating portfolio asset:" << query.lastError().text();
+        return false;
+    }
+
+    emit portfolioAssetUpdated(asset);
+    emit portfolioDataChanged();
+    return true;
+}
+
+bool Database::updatePortfolioAssetPrice(int id, double newPrice)
+{
+    QSqlQuery query;
+    QDateTime now = QDateTime::currentDateTime();
+
+    query.prepare("UPDATE portfolio_assets SET current_price = :price, updated_at = :updated_at WHERE id = :id");
+    query.bindValue(":price", newPrice);
+    query.bindValue(":updated_at", now.toString(Qt::ISODate));
+    query.bindValue(":id", id);
+
+    if (!query.exec()) {
+        qWarning() << "Error updating asset price:" << query.lastError().text();
+        return false;
+    }
+
+    PortfolioAsset asset = getPortfolioAsset(id);
+    emit portfolioAssetUpdated(asset);
+    emit portfolioDataChanged();
+    return true;
+}
+
+bool Database::deletePortfolioAsset(int id)
+{
+    QSqlQuery query;
+
+    // Delete operations first (CASCADE should handle this, but be explicit)
+    query.prepare("DELETE FROM asset_operations WHERE asset_id = :id");
+    query.bindValue(":id", id);
+    query.exec();
+
+    // Delete asset
+    query.prepare("DELETE FROM portfolio_assets WHERE id = :id");
+    query.bindValue(":id", id);
+
+    if (!query.exec()) {
+        qWarning() << "Error deleting portfolio asset:" << query.lastError().text();
+        return false;
+    }
+
+    emit portfolioAssetDeleted(id);
+    emit portfolioDataChanged();
+    return true;
+}
+
+PortfolioAsset Database::getPortfolioAsset(int id)
+{
+    QSqlQuery query;
+    query.prepare(R"(
+        SELECT a.id, a.name, a.category_id, a.country_id, a.currency_id, a.current_price,
+               a.created_at, a.updated_at, a.is_active,
+               ic.name as category_name, co.name as country_name, cu.code as currency_code
+        FROM portfolio_assets a
+        LEFT JOIN investment_categories ic ON a.category_id = ic.id
+        LEFT JOIN countries co ON a.country_id = co.id
+        LEFT JOIN currencies cu ON a.currency_id = cu.id
+        WHERE a.id = :id
+    )");
+    query.bindValue(":id", id);
+
+    if (!query.exec() || !query.next()) {
+        return PortfolioAsset();
+    }
+
+    PortfolioAsset asset(
+        query.value(0).toInt(),
+        query.value(1).toString(),
+        query.value(2).isNull() ? -1 : query.value(2).toInt(),
+        query.value(3).isNull() ? -1 : query.value(3).toInt(),
+        query.value(4).toInt(),
+        query.value(5).toDouble(),
+        QDateTime::fromString(query.value(6).toString(), Qt::ISODate),
+        QDateTime::fromString(query.value(7).toString(), Qt::ISODate),
+        query.value(8).toInt() == 1
+    );
+    asset.setCategoryName(query.value(9).toString());
+    asset.setCountryName(query.value(10).toString());
+    asset.setCurrencyCode(query.value(11).toString());
+
+    // Load computed values
+    asset.setTotalQuantity(getAssetTotalQuantity(id));
+    asset.setTotalInvested(getAssetTotalInvested(id));
+
+    return asset;
+}
+
+QList<PortfolioAsset> Database::getActivePortfolioAssets()
+{
+    QList<PortfolioAsset> result;
+
+    QSqlQuery query(R"(
+        SELECT a.id, a.name, a.category_id, a.country_id, a.currency_id, a.current_price,
+               a.created_at, a.updated_at, a.is_active,
+               ic.name as category_name, co.name as country_name, cu.code as currency_code
+        FROM portfolio_assets a
+        LEFT JOIN investment_categories ic ON a.category_id = ic.id
+        LEFT JOIN countries co ON a.country_id = co.id
+        LEFT JOIN currencies cu ON a.currency_id = cu.id
+        WHERE a.is_active = 1
+        ORDER BY a.name
+    )");
+
+    while (query.next()) {
+        PortfolioAsset asset(
+            query.value(0).toInt(),
+            query.value(1).toString(),
+            query.value(2).isNull() ? -1 : query.value(2).toInt(),
+            query.value(3).isNull() ? -1 : query.value(3).toInt(),
+            query.value(4).toInt(),
+            query.value(5).toDouble(),
+            QDateTime::fromString(query.value(6).toString(), Qt::ISODate),
+            QDateTime::fromString(query.value(7).toString(), Qt::ISODate),
+            query.value(8).toInt() == 1
+        );
+        asset.setCategoryName(query.value(9).toString());
+        asset.setCountryName(query.value(10).toString());
+        asset.setCurrencyCode(query.value(11).toString());
+
+        // Load computed values
+        int assetId = asset.id();
+        asset.setTotalQuantity(getAssetTotalQuantity(assetId));
+        asset.setTotalInvested(getAssetTotalInvested(assetId));
+
+        result.append(asset);
+    }
+
+    return result;
+}
+
+QList<PortfolioAsset> Database::getAllPortfolioAssets()
+{
+    QList<PortfolioAsset> result;
+
+    QSqlQuery query(R"(
+        SELECT a.id, a.name, a.category_id, a.country_id, a.currency_id, a.current_price,
+               a.created_at, a.updated_at, a.is_active,
+               ic.name as category_name, co.name as country_name, cu.code as currency_code
+        FROM portfolio_assets a
+        LEFT JOIN investment_categories ic ON a.category_id = ic.id
+        LEFT JOIN countries co ON a.country_id = co.id
+        LEFT JOIN currencies cu ON a.currency_id = cu.id
+        ORDER BY a.name
+    )");
+
+    while (query.next()) {
+        PortfolioAsset asset(
+            query.value(0).toInt(),
+            query.value(1).toString(),
+            query.value(2).isNull() ? -1 : query.value(2).toInt(),
+            query.value(3).isNull() ? -1 : query.value(3).toInt(),
+            query.value(4).toInt(),
+            query.value(5).toDouble(),
+            QDateTime::fromString(query.value(6).toString(), Qt::ISODate),
+            QDateTime::fromString(query.value(7).toString(), Qt::ISODate),
+            query.value(8).toInt() == 1
+        );
+        asset.setCategoryName(query.value(9).toString());
+        asset.setCountryName(query.value(10).toString());
+        asset.setCurrencyCode(query.value(11).toString());
+
+        // Load computed values
+        int assetId = asset.id();
+        asset.setTotalQuantity(getAssetTotalQuantity(assetId));
+        asset.setTotalInvested(getAssetTotalInvested(assetId));
+
+        result.append(asset);
+    }
+
+    return result;
+}
+
+// ========== ASSET OPERATIONS ==========
+
+bool Database::addAssetOperation(AssetOperation& operation)
+{
+    QSqlQuery query;
+    QDateTime now = QDateTime::currentDateTime();
+
+    query.prepare(R"(
+        INSERT INTO asset_operations (asset_id, date, type, quantity, price, commission, comment, created_at)
+        VALUES (:asset_id, :date, :type, :quantity, :price, :commission, :comment, :created_at)
+    )");
+    query.bindValue(":asset_id", operation.assetId());
+    query.bindValue(":date", operation.date().toString(Qt::ISODate));
+    query.bindValue(":type", AssetOperation::typeToString(operation.type()));
+    query.bindValue(":quantity", operation.quantity());
+    query.bindValue(":price", operation.price());
+    query.bindValue(":commission", operation.commission());
+    query.bindValue(":comment", operation.comment());
+    query.bindValue(":created_at", now.toString(Qt::ISODate));
+
+    if (!query.exec()) {
+        qWarning() << "Error adding asset operation:" << query.lastError().text();
+        return false;
+    }
+
+    operation.setId(query.lastInsertId().toInt());
+    operation.setCreatedAt(now);
+
+    emit assetOperationAdded(operation);
+    emit portfolioDataChanged();
+    return true;
+}
+
+bool Database::deleteAssetOperation(int id)
+{
+    QSqlQuery query;
+    query.prepare("DELETE FROM asset_operations WHERE id = :id");
+    query.bindValue(":id", id);
+
+    if (!query.exec()) {
+        qWarning() << "Error deleting asset operation:" << query.lastError().text();
+        return false;
+    }
+
+    emit assetOperationDeleted(id);
+    emit portfolioDataChanged();
+    return true;
+}
+
+AssetOperation Database::getAssetOperation(int id)
+{
+    QSqlQuery query;
+    query.prepare("SELECT id, asset_id, date, type, quantity, price, commission, comment, created_at FROM asset_operations WHERE id = :id");
+    query.bindValue(":id", id);
+
+    if (query.exec() && query.next()) {
+        return AssetOperation(
+            query.value(0).toInt(),
+            query.value(1).toInt(),
+            QDate::fromString(query.value(2).toString(), Qt::ISODate),
+            AssetOperation::stringToType(query.value(3).toString()),
+            query.value(4).toDouble(),
+            query.value(5).toDouble(),
+            query.value(6).toDouble(),
+            query.value(7).toString(),
+            QDateTime::fromString(query.value(8).toString(), Qt::ISODate)
+        );
+    }
+
+    return AssetOperation();
+}
+
+QList<AssetOperation> Database::getAssetOperations(int assetId)
+{
+    QList<AssetOperation> result;
+
+    QSqlQuery query;
+    query.prepare("SELECT id, asset_id, date, type, quantity, price, commission, comment, created_at FROM asset_operations WHERE asset_id = :asset_id ORDER BY date DESC, id DESC");
+    query.bindValue(":asset_id", assetId);
+
+    if (query.exec()) {
+        while (query.next()) {
+            result.append(AssetOperation(
+                query.value(0).toInt(),
+                query.value(1).toInt(),
+                QDate::fromString(query.value(2).toString(), Qt::ISODate),
+                AssetOperation::stringToType(query.value(3).toString()),
+                query.value(4).toDouble(),
+                query.value(5).toDouble(),
+                query.value(6).toDouble(),
+                query.value(7).toString(),
+                QDateTime::fromString(query.value(8).toString(), Qt::ISODate)
+            ));
+        }
+    }
+
+    return result;
+}
+
+double Database::getAssetTotalQuantity(int assetId)
+{
+    QSqlQuery query;
+    query.prepare(R"(
+        SELECT
+            COALESCE(SUM(CASE WHEN type = 'buy' THEN quantity ELSE 0 END), 0) -
+            COALESCE(SUM(CASE WHEN type = 'sell' THEN quantity ELSE 0 END), 0)
+        FROM asset_operations
+        WHERE asset_id = :asset_id
+    )");
+    query.bindValue(":asset_id", assetId);
+
+    if (query.exec() && query.next()) {
+        return query.value(0).toDouble();
+    }
+
+    return 0.0;
+}
+
+double Database::getAssetTotalInvested(int assetId)
+{
+    QSqlQuery query;
+    query.prepare(R"(
+        SELECT COALESCE(SUM(quantity * price), 0)
+        FROM asset_operations
+        WHERE asset_id = :asset_id AND type = 'buy'
+    )");
+    query.bindValue(":asset_id", assetId);
+
+    if (query.exec() && query.next()) {
+        return query.value(0).toDouble();
+    }
+
+    return 0.0;
+}
+
+// ========== SNAPSHOT FROM PORTFOLIO ==========
+
+bool Database::createSnapshotFromPortfolio(Snapshot& snapshot, const QMap<int, double>& currencyRates)
+{
+    // Set currency rates
+    for (auto it = currencyRates.begin(); it != currencyRates.end(); ++it) {
+        snapshot.setCurrencyRate(it.key(), it.value());
+    }
+
+    // Get all active assets with positive quantity
+    QList<PortfolioAsset> assets = getActivePortfolioAssets();
+
+    for (const PortfolioAsset& asset : assets) {
+        if (asset.totalQuantity() <= 0) {
+            continue;
+        }
+
+        SnapshotPosition pos;
+        pos.setName(asset.name());
+        pos.setCategoryId(asset.categoryId());
+        pos.setCountryId(asset.countryId());
+        pos.setCurrencyId(asset.currencyId());
+        pos.setPrice(asset.currentPrice());
+        pos.setQuantity(asset.totalQuantity());
+        pos.setCategoryName(asset.categoryName());
+        pos.setCountryName(asset.countryName());
+        pos.setCurrencyCode(asset.currencyCode());
+        pos.setCurrencyRate(currencyRates.value(asset.currencyId(), 1.0));
+
+        snapshot.addPosition(pos);
+    }
+
+    return addSnapshot(snapshot);
 }

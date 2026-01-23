@@ -38,9 +38,18 @@ set(SOURCES
     src/snapshotposition.cpp
     src/snapshot.cpp
     src/withdrawal.cpp
+    # Portfolio models
+    src/portfolioasset.cpp
+    src/assetoperation.cpp
     # Investment pages
     src/withdrawalspage.cpp
     src/withdrawalundonotification.cpp
+    # Portfolio pages/dialogs
+    src/portfoliopage.cpp
+    src/addassetdialog.cpp
+    src/assetdetailsdialog.cpp
+    src/addoperationdialog.cpp
+    src/createsnapshotdialog.cpp
 )
 
 set(HEADERS
@@ -65,9 +74,18 @@ set(HEADERS
     include/snapshotposition.h
     include/snapshot.h
     include/withdrawal.h
+    # Portfolio models
+    include/portfolioasset.h
+    include/assetoperation.h
     # Investment pages
     include/withdrawalspage.h
     include/withdrawalundonotification.h
+    # Portfolio pages/dialogs
+    include/portfoliopage.h
+    include/addassetdialog.h
+    include/assetdetailsdialog.h
+    include/addoperationdialog.h
+    include/createsnapshotdialog.h
 )
 
 add_executable(${PROJECT_NAME} WIN32

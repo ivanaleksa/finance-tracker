@@ -13,6 +13,8 @@
 #include "snapshot.h"
 #include "snapshotposition.h"
 #include "withdrawal.h"
+#include "portfolioasset.h"
+#include "assetoperation.h"
 
 class Database : public QObject
 {
@@ -99,6 +101,28 @@ public:
     // Portfolio statistics
     double getPortfolioReturn();
 
+    // ========== LIVE PORTFOLIO ==========
+
+    // Portfolio Assets
+    bool addPortfolioAsset(PortfolioAsset& asset);
+    bool updatePortfolioAsset(const PortfolioAsset& asset);
+    bool updatePortfolioAssetPrice(int id, double newPrice);
+    bool deletePortfolioAsset(int id);
+    PortfolioAsset getPortfolioAsset(int id);
+    QList<PortfolioAsset> getActivePortfolioAssets();
+    QList<PortfolioAsset> getAllPortfolioAssets();
+
+    // Asset Operations
+    bool addAssetOperation(AssetOperation& operation);
+    bool deleteAssetOperation(int id);
+    AssetOperation getAssetOperation(int id);
+    QList<AssetOperation> getAssetOperations(int assetId);
+    double getAssetTotalQuantity(int assetId);
+    double getAssetTotalInvested(int assetId);
+
+    // Create snapshot from live portfolio
+    bool createSnapshotFromPortfolio(Snapshot& snapshot, const QMap<int, double>& currencyRates);
+
 signals:
     void transactionAdded(const Transaction& transaction);
     void transactionDeleted(int id);
@@ -114,6 +138,14 @@ signals:
     void withdrawalAdded(const Withdrawal& withdrawal);
     void withdrawalDeleted(int id);
 
+    // Portfolio signals
+    void portfolioAssetAdded(const PortfolioAsset& asset);
+    void portfolioAssetUpdated(const PortfolioAsset& asset);
+    void portfolioAssetDeleted(int id);
+    void assetOperationAdded(const AssetOperation& operation);
+    void assetOperationDeleted(int id);
+    void portfolioDataChanged();
+
 private:
     Database();
     ~Database();
@@ -122,6 +154,7 @@ private:
 
     bool createTables();
     bool createInvestmentTables();
+    bool createPortfolioTables();
     void insertDefaultCategories();
     void insertDefaultCurrencies();
 
