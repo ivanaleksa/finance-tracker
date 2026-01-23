@@ -193,6 +193,10 @@ void TransactionListPage::loadTransactions()
         deleteBtn->setObjectName("deleteButton");
         deleteBtn->setCursor(Qt::PointingHandCursor);
         deleteBtn->setProperty("transactionId", t.id());
+        if (Database::instance().getCategory(t.categoryId()).name() == "Доход с инвестиций") {
+            deleteBtn->setEnabled(false);
+            deleteBtn->setToolTip("Удалять доход с инвестиций можно на странице выводов");
+        }
         connect(deleteBtn, &QPushButton::clicked, this, &TransactionListPage::onDeleteClicked);
         m_table->setCellWidget(i, 5, deleteBtn);
     }

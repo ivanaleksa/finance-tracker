@@ -67,7 +67,7 @@ void WithdrawalsPage::setupUi()
 
     m_commentEdit = new QLineEdit(this);
     m_commentEdit->setPlaceholderText("Необязательно");
-    m_commentEdit->setMinimumWidth(200);
+    m_commentEdit->setMinimumWidth(100);
     formLayout->addWidget(m_commentEdit, 1);
 
     formLayout->addSpacing(10);
