@@ -14,14 +14,20 @@ class PortfolioPage : public QWidget
 public:
     explicit PortfolioPage(QWidget *parent = nullptr);
 
+    void setCurrencyRates(const QMap<int, double>& rates);
+    QMap<int, double> getCurrencyRates() const { return m_currencyRates; }
+
+signals:
+    void currenciesPageRequested();
+
 public slots:
     void refreshData();
 
 private slots:
     void onAddAssetClicked();
     void onCreateSnapshotClicked();
+    void onCurrenciesClicked();
     void onAssetDoubleClicked(int row, int column);
-    void onCurrencyRateChanged();
 
 private:
     void setupUi();
@@ -29,15 +35,13 @@ private:
     void loadAssets();
     void updateTotals();
 
-    // Currency rates table
-    QTableWidget *m_currencyTable;
-
     // Assets table
     QTableWidget *m_assetsTable;
 
     // Action buttons
     QPushButton *m_addAssetBtn;
     QPushButton *m_createSnapshotBtn;
+    QPushButton *m_currenciesBtn;
 
     // Totals labels
     QLabel *m_totalValueLabel;

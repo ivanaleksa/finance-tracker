@@ -14,6 +14,7 @@ class MonthChartPage;
 class YearChartPage;
 class WithdrawalsPage;
 class PortfolioPage;
+class CurrenciesPage;
 
 class MainWindow : public QMainWindow
 {
@@ -37,7 +38,9 @@ private slots:
 
     // Investments mode slots
     void showPortfolio();
+    void showCurrencies();
     void showWithdrawals();
+    void onCurrencyRatesChanged();
 
     void switchToReportingMode();
     void switchToInvestmentsMode();
@@ -90,6 +93,7 @@ private:
 
     // Investments pages
     PortfolioPage *m_portfolioPage;
+    CurrenciesPage *m_currenciesPage;
     WithdrawalsPage *m_withdrawalsPage;
 };
 

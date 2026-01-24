@@ -7,8 +7,6 @@
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QMessageBox>
-#include <QGroupBox>
-#include <QDoubleSpinBox>
 
 PortfolioPage::PortfolioPage(QWidget *parent)
     : QWidget(parent)
@@ -34,25 +32,7 @@ void PortfolioPage::setupUi()
     titleLabel->setObjectName("pageTitle");
     mainLayout->addWidget(titleLabel);
 
-    // Currency rates section
-    QGroupBox *currencyGroup = new QGroupBox("Курсы валют", this);
-    QVBoxLayout *currencyLayout = new QVBoxLayout(currencyGroup);
-
-    m_currencyTable = new QTableWidget(this);
-    m_currencyTable->setColumnCount(3);
-    m_currencyTable->setHorizontalHeaderLabels({"Валюта", "Название", "Курс к RUB"});
-    m_currencyTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
-    m_currencyTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
-    m_currencyTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
-    m_currencyTable->verticalHeader()->setVisible(false);
-    m_currencyTable->setSelectionMode(QAbstractItemView::NoSelection);
-    m_currencyTable->setAlternatingRowColors(true);
-    m_currencyTable->setMaximumHeight(120);
-
-    currencyLayout->addWidget(m_currencyTable);
-    mainLayout->addWidget(currencyGroup);
-
-    // Action buttons
+    // Action buttons row
     QHBoxLayout *actionLayout = new QHBoxLayout();
 
     m_addAssetBtn = new QPushButton("Добавить актив", this);
@@ -67,6 +47,30 @@ void PortfolioPage::setupUi()
     actionLayout->addWidget(m_createSnapshotBtn);
 
     actionLayout->addStretch();
+
+    // Currencies button
+    m_currenciesBtn = new QPushButton("$ ₽", this);
+    m_currenciesBtn->setObjectName("currenciesButton");
+    m_currenciesBtn->setCursor(Qt::PointingHandCursor);
+    m_currenciesBtn->setToolTip("Управление валютами");
+    m_currenciesBtn->setStyleSheet(
+        "QPushButton { "
+        "   border: 2px solid #3498db; "
+        "   border-radius: 8px; "
+        "   background: transparent; "
+        "   color: #3498db; "
+        "   font-size: 16px; "
+        "   font-weight: bold; "
+        "   padding: 8px 16px; "
+        "} "
+        "QPushButton:hover { "
+        "   background: #3498db; "
+        "   color: white; "
+        "}"
+    );
+    connect(m_currenciesBtn, &QPushButton::clicked, this, &PortfolioPage::onCurrenciesClicked);
+    actionLayout->addWidget(m_currenciesBtn);
+
     mainLayout->addLayout(actionLayout);
 
     // Assets table
@@ -132,59 +136,26 @@ void PortfolioPage::refreshData()
 
 void PortfolioPage::loadCurrencyRates()
 {
-    m_currencyTable->setRowCount(0);
     m_currencyRates.clear();
 
     // Get latest snapshot rates as default
     Snapshot latestSnapshot = Database::instance().getLatestSnapshot();
-    QMap<int, double> snapshotRates = latestSnapshot.currencyRates();
+    m_currencyRates = latestSnapshot.currencyRates();
 
+    // Ensure all currencies have a rate
     QList<Currency> currencies = Database::instance().getCurrencies();
-    m_currencyTable->setRowCount(currencies.size());
-
-    for (int i = 0; i < currencies.size(); ++i) {
-        const Currency& curr = currencies[i];
-
-        QTableWidgetItem *codeItem = new QTableWidgetItem(curr.code());
-        codeItem->setData(Qt::UserRole, curr.id());
-        codeItem->setFlags(codeItem->flags() & ~Qt::ItemIsEditable);
-        m_currencyTable->setItem(i, 0, codeItem);
-
-        QTableWidgetItem *nameItem = new QTableWidgetItem(curr.name());
-        nameItem->setFlags(nameItem->flags() & ~Qt::ItemIsEditable);
-        m_currencyTable->setItem(i, 1, nameItem);
-
-        QDoubleSpinBox *rateSpin = new QDoubleSpinBox(this);
-        rateSpin->setDecimals(4);
-        rateSpin->setRange(0.0001, 999999.9999);
-
-        // Use snapshot rate if available, otherwise default
-        double rate = snapshotRates.value(curr.id(), curr.code() == "RUB" ? 1.0 : 100.0);
-        rateSpin->setValue(rate);
-        rateSpin->setProperty("currencyId", curr.id());
-
-        m_currencyRates[curr.id()] = rate;
-
-        connect(rateSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
-                this, &PortfolioPage::onCurrencyRateChanged);
-
-        m_currencyTable->setCellWidget(i, 2, rateSpin);
+    for (const Currency& curr : currencies) {
+        if (curr.code() == "RUB") {
+            m_currencyRates[curr.id()] = 1.0;
+        } else if (!m_currencyRates.contains(curr.id())) {
+            m_currencyRates[curr.id()] = 100.0;
+        }
     }
 }
 
-void PortfolioPage::onCurrencyRateChanged()
+void PortfolioPage::setCurrencyRates(const QMap<int, double>& rates)
 {
-    // Update currency rates cache
-    for (int i = 0; i < m_currencyTable->rowCount(); ++i) {
-        QTableWidgetItem *codeItem = m_currencyTable->item(i, 0);
-        QDoubleSpinBox *rateSpin = qobject_cast<QDoubleSpinBox*>(m_currencyTable->cellWidget(i, 2));
-        if (codeItem && rateSpin) {
-            int currencyId = codeItem->data(Qt::UserRole).toInt();
-            m_currencyRates[currencyId] = rateSpin->value();
-        }
-    }
-
-    // Reload assets with new rates
+    m_currencyRates = rates;
     loadAssets();
     updateTotals();
 }
@@ -194,59 +165,63 @@ void PortfolioPage::loadAssets()
     m_assetsTable->setRowCount(0);
 
     QList<PortfolioAsset> assets = Database::instance().getActivePortfolioAssets();
-    m_assetsTable->setRowCount(assets.size());
 
-    for (int i = 0; i < assets.size(); ++i) {
-        PortfolioAsset asset = assets[i];
-
-        // Set currency rate from our cache
-        double rate = m_currencyRates.value(asset.currencyId(), 1.0);
-        asset.setCurrencyRate(rate);
+    int visibleRow = 0;
+    for (const PortfolioAsset& assetConst : assets) {
+        PortfolioAsset asset = assetConst;
 
         // Skip assets with zero quantity
         if (asset.totalQuantity() <= 0) {
             continue;
         }
 
+        // Set currency rate from our cache
+        double rate = m_currencyRates.value(asset.currencyId(), 1.0);
+        asset.setCurrencyRate(rate);
+
+        m_assetsTable->setRowCount(visibleRow + 1);
+
         QTableWidgetItem *nameItem = new QTableWidgetItem(asset.name());
         nameItem->setData(Qt::UserRole, asset.id());
-        m_assetsTable->setItem(i, 0, nameItem);
+        m_assetsTable->setItem(visibleRow, 0, nameItem);
 
         QString categoryText = asset.categoryName().isEmpty() ? "—" : asset.categoryName();
-        m_assetsTable->setItem(i, 1, new QTableWidgetItem(categoryText));
+        m_assetsTable->setItem(visibleRow, 1, new QTableWidgetItem(categoryText));
 
         QTableWidgetItem *qtyItem = new QTableWidgetItem(QString::number(asset.totalQuantity(), 'f', 4));
         qtyItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        m_assetsTable->setItem(i, 2, qtyItem);
+        m_assetsTable->setItem(visibleRow, 2, qtyItem);
 
         QString avgPriceStr = QString("%1 %2").arg(asset.averageBuyPrice(), 0, 'f', 2).arg(asset.currencyCode());
         QTableWidgetItem *avgPriceItem = new QTableWidgetItem(avgPriceStr);
         avgPriceItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        m_assetsTable->setItem(i, 3, avgPriceItem);
+        m_assetsTable->setItem(visibleRow, 3, avgPriceItem);
 
         QString currPriceStr = QString("%1 %2").arg(asset.currentPrice(), 0, 'f', 2).arg(asset.currencyCode());
         QTableWidgetItem *currPriceItem = new QTableWidgetItem(currPriceStr);
         currPriceItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        m_assetsTable->setItem(i, 4, currPriceItem);
+        m_assetsTable->setItem(visibleRow, 4, currPriceItem);
 
         QString valueStr = QString("%1 ₽").arg(asset.currentValueInRub(), 0, 'f', 2);
         QTableWidgetItem *valueItem = new QTableWidgetItem(valueStr);
         valueItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        m_assetsTable->setItem(i, 5, valueItem);
+        m_assetsTable->setItem(visibleRow, 5, valueItem);
 
         double yield = asset.yieldPercent();
         QString yieldStr = QString("%1%2%").arg(yield >= 0 ? "+" : "").arg(yield, 0, 'f', 2);
         QTableWidgetItem *yieldItem = new QTableWidgetItem(yieldStr);
         yieldItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
         yieldItem->setForeground(yield >= 0 ? QColor("#27ae60") : QColor("#e74c3c"));
-        m_assetsTable->setItem(i, 6, yieldItem);
+        m_assetsTable->setItem(visibleRow, 6, yieldItem);
 
         double profit = asset.profitInRub();
         QString profitStr = QString("%1%2 ₽").arg(profit >= 0 ? "+" : "").arg(profit, 0, 'f', 2);
         QTableWidgetItem *profitItem = new QTableWidgetItem(profitStr);
         profitItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
         profitItem->setForeground(profit >= 0 ? QColor("#27ae60") : QColor("#e74c3c"));
-        m_assetsTable->setItem(i, 7, profitItem);
+        m_assetsTable->setItem(visibleRow, 7, profitItem);
+
+        visibleRow++;
     }
 
     updateTotals();
@@ -308,6 +283,11 @@ void PortfolioPage::onCreateSnapshotClicked()
 {
     CreateSnapshotDialog dialog(m_currencyRates, this);
     dialog.exec();
+}
+
+void PortfolioPage::onCurrenciesClicked()
+{
+    emit currenciesPageRequested();
 }
 
 void PortfolioPage::onAssetDoubleClicked(int row, int column)

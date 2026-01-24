@@ -6,6 +6,7 @@
 #include "yearchartpage.h"
 #include "withdrawalspage.h"
 #include "portfoliopage.h"
+#include "currenciespage.h"
 #include "database.h"
 #include "config.h"
 #include <QFile>
@@ -188,6 +189,16 @@ void MainWindow::createPages()
     // Portfolio page
     m_portfolioPage = new PortfolioPage(this);
     m_pageStack->addWidget(m_portfolioPage);
+    connect(m_portfolioPage, &PortfolioPage::currenciesPageRequested,
+            this, &MainWindow::showCurrencies);
+
+    // Currencies page
+    m_currenciesPage = new CurrenciesPage(this);
+    m_pageStack->addWidget(m_currenciesPage);
+    connect(m_currenciesPage, &CurrenciesPage::backRequested,
+            this, &MainWindow::showPortfolio);
+    connect(m_currenciesPage, &CurrenciesPage::currencyRatesChanged,
+            this, &MainWindow::onCurrencyRatesChanged);
 
     // Withdrawals page
     m_withdrawalsPage = new WithdrawalsPage(this);
@@ -293,6 +304,21 @@ void MainWindow::showWithdrawals()
     m_pageStack->setCurrentWidget(m_withdrawalsPage);
     setActiveButton(m_btnWithdrawals);
     m_withdrawalsPage->refreshData();
+}
+
+void MainWindow::showCurrencies()
+{
+    // Pass current rates to currencies page
+    m_currenciesPage->setCurrencyRates(m_portfolioPage->getCurrencyRates());
+    m_pageStack->setCurrentWidget(m_currenciesPage);
+    // Keep portfolio button active
+    setActiveButton(m_btnPortfolio);
+}
+
+void MainWindow::onCurrencyRatesChanged()
+{
+    // Update portfolio page with new rates
+    m_portfolioPage->setCurrencyRates(m_currenciesPage->getCurrencyRates());
 }
 
 void MainWindow::loadStyleSheet()
