@@ -6,7 +6,6 @@
 #include <QGroupBox>
 #include <QHeaderView>
 #include <QMessageBox>
-#include <QDoubleSpinBox>
 
 CreateSnapshotDialog::CreateSnapshotDialog(const QMap<int, double>& currencyRates, QWidget *parent)
     : QDialog(parent)
@@ -114,25 +113,14 @@ void CreateSnapshotDialog::loadCurrencies()
 
 void CreateSnapshotDialog::updatePreview()
 {
-    // Collect current rates from table
-    QMap<int, double> rates;
-    for (int i = 0; i < m_ratesTable->rowCount(); ++i) {
-        QTableWidgetItem *codeItem = m_ratesTable->item(i, 0);
-        QDoubleSpinBox *rateSpin = qobject_cast<QDoubleSpinBox*>(m_ratesTable->cellWidget(i, 2));
-        if (codeItem && rateSpin) {
-            int currencyId = codeItem->data(Qt::UserRole).toInt();
-            rates[currencyId] = rateSpin->value();
-        }
-    }
-
-    // Calculate total from active assets
+    // Calculate total from active assets using currency rates
     QList<PortfolioAsset> assets = Database::instance().getActivePortfolioAssets();
     double totalRub = 0.0;
 
     for (const PortfolioAsset& asset : assets) {
         if (asset.totalQuantity() <= 0) continue;
 
-        double rate = rates.value(asset.currencyId(), 1.0);
+        double rate = m_currencyRates.value(asset.currencyId(), 1.0);
         double valueInRub = asset.currentValue() * rate;
         totalRub += valueInRub;
     }
@@ -142,22 +130,12 @@ void CreateSnapshotDialog::updatePreview()
 
 void CreateSnapshotDialog::onCreateClicked()
 {
-    // Collect rates from table
-    QMap<int, double> rates;
-    for (int i = 0; i < m_ratesTable->rowCount(); ++i) {
-        QTableWidgetItem *codeItem = m_ratesTable->item(i, 0);
-        QDoubleSpinBox *rateSpin = qobject_cast<QDoubleSpinBox*>(m_ratesTable->cellWidget(i, 2));
-        if (codeItem && rateSpin) {
-            int currencyId = codeItem->data(Qt::UserRole).toInt();
-            rates[currencyId] = rateSpin->value();
-        }
-    }
-
     Snapshot snapshot;
     snapshot.setDate(m_dateEdit->date());
     snapshot.setDescription(m_descriptionEdit->text().trimmed());
 
-    if (Database::instance().createSnapshotFromPortfolio(snapshot, rates)) {
+    // Use currency rates passed to dialog
+    if (Database::instance().createSnapshotFromPortfolio(snapshot, m_currencyRates)) {
         QMessageBox::information(this, "Успех", "Снимок портфеля успешно создан");
         accept();
     } else {
