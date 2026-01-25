@@ -97,6 +97,7 @@ set(HEADERS
 add_executable(${PROJECT_NAME} WIN32
     ${SOURCES}
     ${HEADERS}
+    resources/app.qrc
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
@@ -114,3 +115,7 @@ configure_file(
     ${CMAKE_CURRENT_BINARY_DIR}/style.qss
     COPYONLY
 )
+
+if (WIN32)
+    target_sources(${PROJECT_NAME} PRIVATE app.rc)
+endif()

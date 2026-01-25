@@ -3,6 +3,7 @@
 #include <QDir>
 #include <QDebug>
 #include <QPalette>
+#include <QIcon>
 #include "mainwindow.h"
 #include "database.h"
 #include "config.h"
@@ -31,6 +32,7 @@ int main(int argc, char *argv[])
     app.setApplicationName(APP_NAME);
     app.setOrganizationName("AlexFinance");
     app.setApplicationVersion(APP_VERSION);
+    app.setWindowIcon(QIcon(":/icons/app.png"));
 
     if (!Database::instance().initialize()) {
         QMessageBox::critical(nullptr, "Ошибка", 
