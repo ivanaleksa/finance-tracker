@@ -12,21 +12,6 @@ CurrenciesPage::CurrenciesPage(QWidget *parent)
     : QWidget(parent)
 {
     setupUi();
-
-    // Load default rates from latest snapshot
-    Snapshot latestSnapshot = Database::instance().getLatestSnapshot();
-    m_currencyRates = latestSnapshot.currencyRates();
-
-    // Ensure RUB has rate 1
-    QList<Currency> currencies = Database::instance().getCurrencies();
-    for (const Currency& curr : currencies) {
-        if (curr.code() == "RUB") {
-            m_currencyRates[curr.id()] = 1.0;
-        } else if (!m_currencyRates.contains(curr.id())) {
-            m_currencyRates[curr.id()] = 100.0; // Default rate
-        }
-    }
-
     loadCurrencies();
 
     connect(&Database::instance(), &Database::investmentDataChanged,
@@ -106,6 +91,7 @@ void CurrenciesPage::loadCurrencies()
     // Clear existing cards
     qDeleteAll(m_cards);
     m_cards.clear();
+    m_currencyRates.clear();
 
     if (m_cardsContainer->layout()) {
         delete m_cardsContainer->layout();
@@ -122,7 +108,9 @@ void CurrenciesPage::loadCurrencies()
     const int maxCols = 4;
 
     for (const Currency& curr : currencies) {
-        double rate = m_currencyRates.value(curr.id(), curr.code() == "RUB" ? 1.0 : 100.0);
+        // Use rate from database
+        double rate = curr.rate();
+        m_currencyRates[curr.id()] = rate;
 
         CurrencyCard *card = new CurrencyCard(curr, rate, m_cardsContainer);
         connect(card, &CurrencyCard::rateChanged, this, &CurrenciesPage::onRateChanged);
@@ -183,6 +171,7 @@ void CurrenciesPage::onAddCurrencyClicked()
     Currency currency;
     currency.setCode(code);
     currency.setName(name.trimmed());
+    currency.setRate(1.0);  // Default rate
 
     if (Database::instance().addCurrency(currency)) {
         m_currencyRates[currency.id()] = 1.0;
@@ -196,8 +185,15 @@ void CurrenciesPage::onAddCurrencyClicked()
 
 void CurrenciesPage::onRateChanged(int currencyId, double newRate)
 {
-    m_currencyRates[currencyId] = newRate;
-    emit currencyRatesChanged();
+    // Save rate to database
+    if (Database::instance().updateCurrencyRate(currencyId, newRate)) {
+        m_currencyRates[currencyId] = newRate;
+        emit currencyRatesChanged();
+    } else {
+        QMessageBox::warning(this, "Ошибка", "Не удалось сохранить курс валюты.");
+        // Reload to revert to saved value
+        loadCurrencies();
+    }
 }
 
 void CurrenciesPage::onRenameRequested(int currencyId)

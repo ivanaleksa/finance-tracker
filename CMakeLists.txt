@@ -52,6 +52,7 @@ set(SOURCES
     src/createsnapshotdialog.cpp
     src/currenciespage.cpp
     src/currencycard.cpp
+    src/assetcard.cpp
 )
 
 set(HEADERS
@@ -90,6 +91,7 @@ set(HEADERS
     include/createsnapshotdialog.h
     include/currenciespage.h
     include/currencycard.h
+    include/assetcard.h
 )
 
 add_executable(${PROJECT_NAME} WIN32

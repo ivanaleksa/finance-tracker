@@ -77,6 +77,7 @@ public:
     // Currencies
     bool addCurrency(Currency& currency);
     bool updateCurrency(int id, const QString& code, const QString& name);
+    bool updateCurrencyRate(int id, double rate);
     bool deleteCurrency(int id);
     QList<Currency> getCurrencies();
     Currency getCurrency(int id);

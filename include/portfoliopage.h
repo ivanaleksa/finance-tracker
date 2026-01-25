@@ -2,10 +2,12 @@
 #define PORTFOLIOPAGE_H
 
 #include <QWidget>
-#include <QTableWidget>
 #include <QPushButton>
 #include <QLabel>
 #include <QMap>
+#include <QScrollArea>
+#include <QVBoxLayout>
+#include "assetcard.h"
 
 class PortfolioPage : public QWidget
 {
@@ -27,26 +29,28 @@ private slots:
     void onAddAssetClicked();
     void onCreateSnapshotClicked();
     void onCurrenciesClicked();
-    void onAssetDoubleClicked(int row, int column);
+    void onAssetCardClicked(int assetId);
+    void onAssetBuyRequested(int assetId);
+    void onAssetSellRequested(int assetId);
+    void onAssetDeleteRequested(int assetId);
+    void onAssetPriceChanged(int assetId, double newPrice);
 
 private:
     void setupUi();
     void loadCurrencyRates();
     void loadAssets();
-    void updateTotals();
+    void clearCards();
 
-    // Assets table
-    QTableWidget *m_assetsTable;
+    // Cards container
+    QScrollArea *m_scrollArea;
+    QWidget *m_cardsContainer;
+    QVBoxLayout *m_cardsLayout;
+    QList<AssetCard*> m_assetCards;
 
     // Action buttons
     QPushButton *m_addAssetBtn;
     QPushButton *m_createSnapshotBtn;
     QPushButton *m_currenciesBtn;
-
-    // Totals labels
-    QLabel *m_totalValueLabel;
-    QLabel *m_totalProfitLabel;
-    QLabel *m_totalYieldLabel;
 
     // Currency rates cache
     QMap<int, double> m_currencyRates;

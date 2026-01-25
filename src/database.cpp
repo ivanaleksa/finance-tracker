@@ -733,11 +733,25 @@ bool Database::createInvestmentTables()
         CREATE TABLE IF NOT EXISTS currencies (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             code TEXT NOT NULL UNIQUE,
-            name TEXT NOT NULL
+            name TEXT NOT NULL,
+            rate REAL NOT NULL DEFAULT 1.0
         )
     )")) {
         qWarning() << "Error creating currencies:" << query.lastError().text();
         return false;
+    }
+
+    // Migration: add rate column if it doesn't exist
+    query.exec("PRAGMA table_info(currencies)");
+    bool hasRate = false;
+    while (query.next()) {
+        if (query.value(1).toString() == "rate") {
+            hasRate = true;
+            break;
+        }
+    }
+    if (!hasRate) {
+        query.exec("ALTER TABLE currencies ADD COLUMN rate REAL NOT NULL DEFAULT 1.0");
     }
 
     // Snapshots table
@@ -999,9 +1013,10 @@ Country Database::getCountry(int id)
 bool Database::addCurrency(Currency& currency)
 {
     QSqlQuery query;
-    query.prepare("INSERT INTO currencies (code, name) VALUES (:code, :name)");
+    query.prepare("INSERT INTO currencies (code, name, rate) VALUES (:code, :name, :rate)");
     query.bindValue(":code", currency.code());
     query.bindValue(":name", currency.name());
+    query.bindValue(":rate", currency.rate());
 
     if (!query.exec()) {
         qWarning() << "Error adding currency:" << query.lastError().text();
@@ -1027,6 +1042,24 @@ bool Database::updateCurrency(int id, const QString& code, const QString& name)
     }
 
     emit investmentDataChanged();
+    return true;
+}
+
+bool Database::updateCurrencyRate(int id, double rate)
+{
+    QSqlQuery query;
+    query.prepare("UPDATE currencies SET rate = :rate WHERE id = :id");
+    query.bindValue(":rate", rate);
+    query.bindValue(":id", id);
+
+    if (!query.exec()) {
+        qWarning() << "Error updating currency rate:" << query.lastError().text();
+        return false;
+    }
+
+    // Don't emit investmentDataChanged here - it causes crash when card is deleted
+    // while still processing event. CurrenciesPage handles rate updates via currencyRatesChanged signal.
+    emit portfolioDataChanged();
     return true;
 }
 
@@ -1056,12 +1089,13 @@ QList<Currency> Database::getCurrencies()
 {
     QList<Currency> result;
 
-    QSqlQuery query("SELECT id, code, name FROM currencies ORDER BY code");
+    QSqlQuery query("SELECT id, code, name, rate FROM currencies ORDER BY code");
     while (query.next()) {
         result.append(Currency(
             query.value(0).toInt(),
             query.value(1).toString(),
-            query.value(2).toString()
+            query.value(2).toString(),
+            query.value(3).toDouble()
         ));
     }
 
@@ -1071,14 +1105,15 @@ QList<Currency> Database::getCurrencies()
 Currency Database::getCurrency(int id)
 {
     QSqlQuery query;
-    query.prepare("SELECT id, code, name FROM currencies WHERE id = :id");
+    query.prepare("SELECT id, code, name, rate FROM currencies WHERE id = :id");
     query.bindValue(":id", id);
 
     if (query.exec() && query.next()) {
         return Currency(
             query.value(0).toInt(),
             query.value(1).toString(),
-            query.value(2).toString()
+            query.value(2).toString(),
+            query.value(3).toDouble()
         );
     }
 
@@ -1088,14 +1123,15 @@ Currency Database::getCurrency(int id)
 Currency Database::getCurrencyByCode(const QString& code)
 {
     QSqlQuery query;
-    query.prepare("SELECT id, code, name FROM currencies WHERE code = :code");
+    query.prepare("SELECT id, code, name, rate FROM currencies WHERE code = :code");
     query.bindValue(":code", code);
 
     if (query.exec() && query.next()) {
         return Currency(
             query.value(0).toInt(),
             query.value(1).toString(),
-            query.value(2).toString()
+            query.value(2).toString(),
+            query.value(3).toDouble()
         );
     }
 

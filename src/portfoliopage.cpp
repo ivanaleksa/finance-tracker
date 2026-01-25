@@ -1,12 +1,14 @@
 #include "portfoliopage.h"
 #include "addassetdialog.h"
 #include "assetdetailsdialog.h"
+#include "addoperationdialog.h"
 #include "createsnapshotdialog.h"
 #include "database.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <QHeaderView>
 #include <QMessageBox>
+#include <QFrame>
+#include <QScrollBar>
 
 PortfolioPage::PortfolioPage(QWidget *parent)
     : QWidget(parent)
@@ -73,83 +75,38 @@ void PortfolioPage::setupUi()
 
     mainLayout->addLayout(actionLayout);
 
-    // Assets table
-    m_assetsTable = new QTableWidget(this);
-    m_assetsTable->setObjectName("transactionTable");
-    m_assetsTable->setColumnCount(8);
-    m_assetsTable->setHorizontalHeaderLabels({
-        "Название", "Категория", "Кол-во", "Ср. цена", "Тек. цена", "Стоимость", "Доходность %", "Прибыль"
-    });
-    m_assetsTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
-    m_assetsTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
-    m_assetsTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
-    m_assetsTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::ResizeToContents);
-    m_assetsTable->horizontalHeader()->setSectionResizeMode(4, QHeaderView::ResizeToContents);
-    m_assetsTable->horizontalHeader()->setSectionResizeMode(5, QHeaderView::ResizeToContents);
-    m_assetsTable->horizontalHeader()->setSectionResizeMode(6, QHeaderView::ResizeToContents);
-    m_assetsTable->horizontalHeader()->setSectionResizeMode(7, QHeaderView::ResizeToContents);
-    m_assetsTable->verticalHeader()->setVisible(false);
-    m_assetsTable->setSelectionBehavior(QAbstractItemView::SelectRows);
-    m_assetsTable->setSelectionMode(QAbstractItemView::SingleSelection);
-    m_assetsTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    m_assetsTable->setAlternatingRowColors(true);
-    m_assetsTable->verticalHeader()->setDefaultSectionSize(40);
+    // Scroll area for cards
+    m_scrollArea = new QScrollArea(this);
+    m_scrollArea->setWidgetResizable(true);
+    m_scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_scrollArea->setFrameShape(QFrame::NoFrame);
+    m_scrollArea->setStyleSheet("QScrollArea { background: transparent; }");
 
-    connect(m_assetsTable, &QTableWidget::cellDoubleClicked,
-            this, &PortfolioPage::onAssetDoubleClicked);
+    m_cardsContainer = new QWidget();
+    m_cardsContainer->setStyleSheet("background: transparent;");
+    m_cardsLayout = new QVBoxLayout(m_cardsContainer);
+    m_cardsLayout->setContentsMargins(0, 0, 0, 0);
+    m_cardsLayout->setSpacing(20);
+    m_cardsLayout->addStretch();
 
-    mainLayout->addWidget(m_assetsTable, 1);
-
-    // Totals section
-    QWidget *totalsWidget = new QWidget(this);
-    totalsWidget->setObjectName("formGroup");
-    QHBoxLayout *totalsLayout = new QHBoxLayout(totalsWidget);
-    totalsLayout->setContentsMargins(20, 15, 20, 15);
-    totalsLayout->setSpacing(30);
-
-    totalsLayout->addWidget(new QLabel("Итого:", this));
-
-    m_totalValueLabel = new QLabel("0.00 ₽", this);
-    m_totalValueLabel->setStyleSheet("font-weight: bold; font-size: 14px;");
-    totalsLayout->addWidget(new QLabel("Стоимость:", this));
-    totalsLayout->addWidget(m_totalValueLabel);
-
-    m_totalProfitLabel = new QLabel("0.00 ₽", this);
-    m_totalProfitLabel->setStyleSheet("font-weight: bold; font-size: 14px;");
-    totalsLayout->addWidget(new QLabel("Прибыль:", this));
-    totalsLayout->addWidget(m_totalProfitLabel);
-
-    m_totalYieldLabel = new QLabel("0.00%", this);
-    m_totalYieldLabel->setStyleSheet("font-weight: bold; font-size: 14px;");
-    totalsLayout->addWidget(new QLabel("Доходность:", this));
-    totalsLayout->addWidget(m_totalYieldLabel);
-
-    totalsLayout->addStretch();
-    mainLayout->addWidget(totalsWidget);
+    m_scrollArea->setWidget(m_cardsContainer);
+    mainLayout->addWidget(m_scrollArea, 1);
 }
 
 void PortfolioPage::refreshData()
 {
+    loadCurrencyRates();
     loadAssets();
-    updateTotals();
 }
 
 void PortfolioPage::loadCurrencyRates()
 {
     m_currencyRates.clear();
 
-    // Get latest snapshot rates as default
-    Snapshot latestSnapshot = Database::instance().getLatestSnapshot();
-    m_currencyRates = latestSnapshot.currencyRates();
-
-    // Ensure all currencies have a rate
+    // Load rates directly from currencies table
     QList<Currency> currencies = Database::instance().getCurrencies();
     for (const Currency& curr : currencies) {
-        if (curr.code() == "RUB") {
-            m_currencyRates[curr.id()] = 1.0;
-        } else if (!m_currencyRates.contains(curr.id())) {
-            m_currencyRates[curr.id()] = 100.0;
-        }
+        m_currencyRates[curr.id()] = curr.rate();
     }
 }
 
@@ -157,16 +114,34 @@ void PortfolioPage::setCurrencyRates(const QMap<int, double>& rates)
 {
     m_currencyRates = rates;
     loadAssets();
-    updateTotals();
+}
+
+void PortfolioPage::clearCards()
+{
+    for (AssetCard *card : m_assetCards) {
+        card->deleteLater();
+    }
+    m_assetCards.clear();
+
+    // Remove all widgets from layout except the stretch
+    while (m_cardsLayout->count() > 1) {
+        QLayoutItem *item = m_cardsLayout->takeAt(0);
+        if (item->widget()) {
+            item->widget()->deleteLater();
+        }
+        delete item;
+    }
 }
 
 void PortfolioPage::loadAssets()
 {
-    m_assetsTable->setRowCount(0);
+    clearCards();
 
     QList<PortfolioAsset> assets = Database::instance().getActivePortfolioAssets();
 
-    int visibleRow = 0;
+    // Group assets by category
+    QMap<QString, QList<PortfolioAsset>> assetsByCategory;
+
     for (const PortfolioAsset& assetConst : assets) {
         PortfolioAsset asset = assetConst;
 
@@ -179,85 +154,62 @@ void PortfolioPage::loadAssets()
         double rate = m_currencyRates.value(asset.currencyId(), 1.0);
         asset.setCurrencyRate(rate);
 
-        m_assetsTable->setRowCount(visibleRow + 1);
-
-        QTableWidgetItem *nameItem = new QTableWidgetItem(asset.name());
-        nameItem->setData(Qt::UserRole, asset.id());
-        m_assetsTable->setItem(visibleRow, 0, nameItem);
-
-        QString categoryText = asset.categoryName().isEmpty() ? "—" : asset.categoryName();
-        m_assetsTable->setItem(visibleRow, 1, new QTableWidgetItem(categoryText));
-
-        QTableWidgetItem *qtyItem = new QTableWidgetItem(QString::number(asset.totalQuantity(), 'f', 4));
-        qtyItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        m_assetsTable->setItem(visibleRow, 2, qtyItem);
-
-        QString avgPriceStr = QString("%1 %2").arg(asset.averageBuyPrice(), 0, 'f', 2).arg(asset.currencyCode());
-        QTableWidgetItem *avgPriceItem = new QTableWidgetItem(avgPriceStr);
-        avgPriceItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        m_assetsTable->setItem(visibleRow, 3, avgPriceItem);
-
-        QString currPriceStr = QString("%1 %2").arg(asset.currentPrice(), 0, 'f', 2).arg(asset.currencyCode());
-        QTableWidgetItem *currPriceItem = new QTableWidgetItem(currPriceStr);
-        currPriceItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        m_assetsTable->setItem(visibleRow, 4, currPriceItem);
-
-        QString valueStr = QString("%1 ₽").arg(asset.currentValueInRub(), 0, 'f', 2);
-        QTableWidgetItem *valueItem = new QTableWidgetItem(valueStr);
-        valueItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        m_assetsTable->setItem(visibleRow, 5, valueItem);
-
-        double yield = asset.yieldPercent();
-        QString yieldStr = QString("%1%2%").arg(yield >= 0 ? "+" : "").arg(yield, 0, 'f', 2);
-        QTableWidgetItem *yieldItem = new QTableWidgetItem(yieldStr);
-        yieldItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        yieldItem->setForeground(yield >= 0 ? QColor("#27ae60") : QColor("#e74c3c"));
-        m_assetsTable->setItem(visibleRow, 6, yieldItem);
-
-        double profit = asset.profitInRub();
-        QString profitStr = QString("%1%2 ₽").arg(profit >= 0 ? "+" : "").arg(profit, 0, 'f', 2);
-        QTableWidgetItem *profitItem = new QTableWidgetItem(profitStr);
-        profitItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        profitItem->setForeground(profit >= 0 ? QColor("#27ae60") : QColor("#e74c3c"));
-        m_assetsTable->setItem(visibleRow, 7, profitItem);
-
-        visibleRow++;
+        QString category = asset.categoryName().isEmpty() ? "Без категории" : asset.categoryName();
+        assetsByCategory[category].append(asset);
     }
 
-    updateTotals();
-}
+    // Create category sections
+    for (auto it = assetsByCategory.begin(); it != assetsByCategory.end(); ++it) {
+        QString categoryName = it.key();
+        QList<PortfolioAsset> categoryAssets = it.value();
 
-void PortfolioPage::updateTotals()
-{
-    QList<PortfolioAsset> assets = Database::instance().getActivePortfolioAssets();
+        // Category header
+        QWidget *headerWidget = new QWidget();
+        QHBoxLayout *headerLayout = new QHBoxLayout(headerWidget);
+        headerLayout->setContentsMargins(0, 10, 0, 5);
 
-    double totalValue = 0.0;
-    double totalInvested = 0.0;
+        QLabel *categoryLabel = new QLabel(categoryName, headerWidget);
+        categoryLabel->setStyleSheet("font-size: 16px; font-weight: bold; color: #2c3e50;");
+        headerLayout->addWidget(categoryLabel);
 
-    for (const PortfolioAsset& asset : assets) {
-        if (asset.totalQuantity() <= 0) continue;
+        // Separator line
+        QFrame *line = new QFrame(headerWidget);
+        line->setFrameShape(QFrame::HLine);
+        line->setStyleSheet("background-color: #bdc3c7;");
+        line->setFixedHeight(1);
+        headerLayout->addWidget(line, 1);
 
-        double rate = m_currencyRates.value(asset.currencyId(), 1.0);
-        totalValue += asset.currentValue() * rate;
-        totalInvested += asset.totalInvested() * rate;
+        // Insert before the stretch
+        m_cardsLayout->insertWidget(m_cardsLayout->count() - 1, headerWidget);
+
+        // Cards container for this category (FlowLayout-like with wrap)
+        QWidget *cardsRow = new QWidget();
+        QHBoxLayout *rowLayout = new QHBoxLayout(cardsRow);
+        rowLayout->setContentsMargins(0, 0, 0, 0);
+        rowLayout->setSpacing(15);
+        rowLayout->setAlignment(Qt::AlignLeft);
+
+        // Create cards for each asset in this category
+        for (const PortfolioAsset& asset : categoryAssets) {
+            AssetCard *card = new AssetCard(asset, cardsRow);
+
+            connect(card, &AssetCard::clicked, this, [this, assetId = asset.id()]() {
+                onAssetCardClicked(assetId);
+            });
+            connect(card, &AssetCard::buyRequested, this, &PortfolioPage::onAssetBuyRequested);
+            connect(card, &AssetCard::sellRequested, this, &PortfolioPage::onAssetSellRequested);
+            connect(card, &AssetCard::deleteRequested, this, &PortfolioPage::onAssetDeleteRequested);
+            connect(card, &AssetCard::priceChanged, this, &PortfolioPage::onAssetPriceChanged);
+
+            rowLayout->addWidget(card);
+            m_assetCards.append(card);
+        }
+
+        rowLayout->addStretch();
+
+        // Insert before the stretch
+        m_cardsLayout->insertWidget(m_cardsLayout->count() - 1, cardsRow);
     }
-
-    double totalProfit = totalValue - totalInvested;
-    double totalYield = totalInvested > 0 ? (totalProfit / totalInvested) * 100.0 : 0.0;
-
-    m_totalValueLabel->setText(QString("%1 ₽").arg(totalValue, 0, 'f', 2));
-
-    QString profitColor = totalProfit >= 0 ? "#27ae60" : "#e74c3c";
-    m_totalProfitLabel->setText(QString("<span style='color: %1;'>%2%3 ₽</span>")
-                               .arg(profitColor)
-                               .arg(totalProfit >= 0 ? "+" : "")
-                               .arg(totalProfit, 0, 'f', 2));
-
-    QString yieldColor = totalYield >= 0 ? "#27ae60" : "#e74c3c";
-    m_totalYieldLabel->setText(QString("<span style='color: %1;'>%2%3%</span>")
-                              .arg(yieldColor)
-                              .arg(totalYield >= 0 ? "+" : "")
-                              .arg(totalYield, 0, 'f', 2));
 }
 
 void PortfolioPage::onAddAssetClicked()
@@ -290,14 +242,62 @@ void PortfolioPage::onCurrenciesClicked()
     emit currenciesPageRequested();
 }
 
-void PortfolioPage::onAssetDoubleClicked(int row, int column)
+void PortfolioPage::onAssetCardClicked(int assetId)
 {
-    Q_UNUSED(column);
-
-    QTableWidgetItem *item = m_assetsTable->item(row, 0);
-    if (!item) return;
-
-    int assetId = item->data(Qt::UserRole).toInt();
     AssetDetailsDialog dialog(assetId, this);
     dialog.exec();
+}
+
+void PortfolioPage::onAssetBuyRequested(int assetId)
+{
+    AddOperationDialog dialog(assetId, AssetOperation::Type::Buy, 0, this);
+    if (dialog.exec() == QDialog::Accepted) {
+        AssetOperation op = dialog.getOperation();
+        if (!Database::instance().addAssetOperation(op)) {
+            QMessageBox::critical(this, "Ошибка", "Не удалось добавить операцию покупки");
+        }
+    }
+}
+
+void PortfolioPage::onAssetSellRequested(int assetId)
+{
+    double maxQty = Database::instance().getAssetTotalQuantity(assetId);
+    if (maxQty <= 0) {
+        QMessageBox::warning(this, "Предупреждение", "Нет активов для продажи");
+        return;
+    }
+
+    AddOperationDialog dialog(assetId, AssetOperation::Type::Sell, maxQty, this);
+    if (dialog.exec() == QDialog::Accepted) {
+        AssetOperation op = dialog.getOperation();
+        if (!Database::instance().addAssetOperation(op)) {
+            QMessageBox::critical(this, "Ошибка", "Не удалось добавить операцию продажи");
+        }
+    }
+}
+
+void PortfolioPage::onAssetDeleteRequested(int assetId)
+{
+    QMessageBox::StandardButton reply = QMessageBox::question(
+        this, "Подтверждение",
+        "Вы уверены, что хотите удалить этот актив?\nВсе операции по нему также будут удалены.",
+        QMessageBox::Yes | QMessageBox::No
+    );
+
+    if (reply == QMessageBox::Yes) {
+        if (!Database::instance().deletePortfolioAsset(assetId)) {
+            QMessageBox::critical(this, "Ошибка", "Не удалось удалить актив");
+        }
+    }
+}
+
+void PortfolioPage::onAssetPriceChanged(int assetId, double newPrice)
+{
+    PortfolioAsset asset = Database::instance().getPortfolioAsset(assetId);
+    if (asset.isValid()) {
+        asset.setCurrentPrice(newPrice);
+        if (!Database::instance().updatePortfolioAsset(asset)) {
+            QMessageBox::critical(this, "Ошибка", "Не удалось обновить цену");
+        }
+    }
 }
