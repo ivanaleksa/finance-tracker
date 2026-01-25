@@ -80,21 +80,25 @@ void AddAssetDialog::setupUi()
     m_quantitySpin = new QDoubleSpinBox(this);
     m_quantitySpin->setDecimals(6);
     m_quantitySpin->setRange(0.000001, 999999999.0);
+    m_quantitySpin->setButtonSymbols(QAbstractSpinBox::NoButtons);
     purchaseLayout->addRow("Количество:", m_quantitySpin);
 
     m_buyPriceSpin = new QDoubleSpinBox(this);
     m_buyPriceSpin->setDecimals(2);
     m_buyPriceSpin->setRange(0.0, 999999999.99);
+    m_buyPriceSpin->setButtonSymbols(QAbstractSpinBox::NoButtons);
     purchaseLayout->addRow("Цена покупки:", m_buyPriceSpin);
 
     m_currentPriceSpin = new QDoubleSpinBox(this);
     m_currentPriceSpin->setDecimals(2);
     m_currentPriceSpin->setRange(0.0, 999999999.99);
+    m_currentPriceSpin->setButtonSymbols(QAbstractSpinBox::NoButtons);
     purchaseLayout->addRow("Текущая цена:", m_currentPriceSpin);
 
     m_commissionSpin = new QDoubleSpinBox(this);
     m_commissionSpin->setDecimals(2);
     m_commissionSpin->setRange(0.0, 999999999.99);
+    m_commissionSpin->setButtonSymbols(QAbstractSpinBox::NoButtons);
     purchaseLayout->addRow("Комиссия:", m_commissionSpin);
 
     mainLayout->addWidget(purchaseGroup);
@@ -111,18 +115,12 @@ void AddAssetDialog::setupUi()
 
     // Buttons
     QHBoxLayout *btnLayout = new QHBoxLayout();
-    btnLayout->addStretch();
-
-    QPushButton *cancelBtn = new QPushButton("Отмена", this);
-    cancelBtn->setCursor(Qt::PointingHandCursor);
-    connect(cancelBtn, &QPushButton::clicked, this, &QDialog::reject);
-    btnLayout->addWidget(cancelBtn);
 
     m_addBtn = new QPushButton("Добавить", this);
     m_addBtn->setObjectName("primaryButton");
     m_addBtn->setCursor(Qt::PointingHandCursor);
     connect(m_addBtn, &QPushButton::clicked, this, &AddAssetDialog::onAddClicked);
-    btnLayout->addWidget(m_addBtn);
+    btnLayout->addWidget(m_addBtn, 0, Qt::AlignCenter);
 
     mainLayout->addLayout(btnLayout);
 }

@@ -70,18 +70,12 @@ void CreateSnapshotDialog::setupUi()
 
     // Buttons
     QHBoxLayout *btnLayout = new QHBoxLayout();
-    btnLayout->addStretch();
-
-    QPushButton *cancelBtn = new QPushButton("Отмена", this);
-    cancelBtn->setCursor(Qt::PointingHandCursor);
-    connect(cancelBtn, &QPushButton::clicked, this, &QDialog::reject);
-    btnLayout->addWidget(cancelBtn);
 
     m_createBtn = new QPushButton("Создать снимок", this);
     m_createBtn->setObjectName("primaryButton");
     m_createBtn->setCursor(Qt::PointingHandCursor);
     connect(m_createBtn, &QPushButton::clicked, this, &CreateSnapshotDialog::onCreateClicked);
-    btnLayout->addWidget(m_createBtn);
+    btnLayout->addWidget(m_createBtn, 0, Qt::AlignCenter);
 
     mainLayout->addLayout(btnLayout);
 }
@@ -103,19 +97,18 @@ void CreateSnapshotDialog::loadCurrencies()
         nameItem->setFlags(nameItem->flags() & ~Qt::ItemIsEditable);
         m_ratesTable->setItem(i, 1, nameItem);
 
-        QDoubleSpinBox *rateSpin = new QDoubleSpinBox(this);
-        rateSpin->setDecimals(4);
-        rateSpin->setRange(0.0001, 999999.9999);
+        double rate = m_currencyRates.value(
+            curr.id(),
+            curr.code() == "RUB" ? 1.0 : 100.0
+            );
 
-        // Set rate from passed rates or default
-        double rate = m_currencyRates.value(curr.id(), curr.code() == "RUB" ? 1.0 : 100.0);
-        rateSpin->setValue(rate);
-        rateSpin->setProperty("currencyId", curr.id());
+        QTableWidgetItem *rateItem =
+            new QTableWidgetItem(QString::number(rate, 'f', 4));
 
-        connect(rateSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
-                this, &CreateSnapshotDialog::updatePreview);
+        rateItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        rateItem->setFlags(rateItem->flags() & ~Qt::ItemIsEditable);
 
-        m_ratesTable->setCellWidget(i, 2, rateSpin);
+        m_ratesTable->setItem(i, 2, rateItem);
     }
 }
 

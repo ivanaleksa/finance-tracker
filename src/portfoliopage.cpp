@@ -30,7 +30,7 @@ void PortfolioPage::setupUi()
     mainLayout->setSpacing(20);
 
     // Title
-    QLabel *titleLabel = new QLabel("Живой портфель", this);
+    QLabel *titleLabel = new QLabel("Портфель", this);
     titleLabel->setObjectName("pageTitle");
     mainLayout->addWidget(titleLabel);
 
@@ -44,6 +44,7 @@ void PortfolioPage::setupUi()
     actionLayout->addWidget(m_addAssetBtn);
 
     m_createSnapshotBtn = new QPushButton("Сделать снимок", this);
+    m_createSnapshotBtn->setObjectName("additionalyButton");
     m_createSnapshotBtn->setCursor(Qt::PointingHandCursor);
     connect(m_createSnapshotBtn, &QPushButton::clicked, this, &PortfolioPage::onCreateSnapshotClicked);
     actionLayout->addWidget(m_createSnapshotBtn);

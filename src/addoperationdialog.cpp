@@ -37,6 +37,7 @@ void AddOperationDialog::setupUi()
     // Quantity
     m_quantitySpin = new QDoubleSpinBox(this);
     m_quantitySpin->setDecimals(6);
+    m_quantitySpin->setButtonSymbols(QAbstractSpinBox::NoButtons);
     m_quantitySpin->setRange(0.000001, 999999999.0);
     if (m_type == AssetOperation::Type::Sell && m_maxQuantity > 0) {
         m_quantitySpin->setMaximum(m_maxQuantity);
@@ -49,6 +50,7 @@ void AddOperationDialog::setupUi()
     m_priceSpin = new QDoubleSpinBox(this);
     m_priceSpin->setDecimals(2);
     m_priceSpin->setRange(0.0, 999999999.99);
+    m_priceSpin->setButtonSymbols(QAbstractSpinBox::NoButtons);
     connect(m_priceSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &AddOperationDialog::updateTotalLabel);
     formLayout->addRow("Цена за единицу:", m_priceSpin);
@@ -57,6 +59,7 @@ void AddOperationDialog::setupUi()
     m_commissionSpin = new QDoubleSpinBox(this);
     m_commissionSpin->setDecimals(2);
     m_commissionSpin->setRange(0.0, 999999999.99);
+    m_commissionSpin->setButtonSymbols(QAbstractSpinBox::NoButtons);
     connect(m_commissionSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &AddOperationDialog::updateTotalLabel);
     formLayout->addRow("Комиссия:", m_commissionSpin);
@@ -77,19 +80,13 @@ void AddOperationDialog::setupUi()
 
     // Buttons
     QHBoxLayout *btnLayout = new QHBoxLayout();
-    btnLayout->addStretch();
-
-    QPushButton *cancelBtn = new QPushButton("Отмена", this);
-    cancelBtn->setCursor(Qt::PointingHandCursor);
-    connect(cancelBtn, &QPushButton::clicked, this, &QDialog::reject);
-    btnLayout->addWidget(cancelBtn);
 
     QString addBtnText = (m_type == AssetOperation::Type::Buy) ? "Купить" : "Продать";
     m_addBtn = new QPushButton(addBtnText, this);
     m_addBtn->setObjectName("primaryButton");
     m_addBtn->setCursor(Qt::PointingHandCursor);
     connect(m_addBtn, &QPushButton::clicked, this, &AddOperationDialog::onAddClicked);
-    btnLayout->addWidget(m_addBtn);
+    btnLayout->addWidget(m_addBtn, 0, Qt::AlignCenter);
 
     mainLayout->addLayout(btnLayout);
 
