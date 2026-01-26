@@ -53,6 +53,8 @@ set(SOURCES
     src/currenciespage.cpp
     src/currencycard.cpp
     src/assetcard.cpp
+    src/snapshotshistorypage.cpp
+    src/snapshotitemwidget.cpp
 )
 
 set(HEADERS
@@ -92,6 +94,8 @@ set(HEADERS
     include/currenciespage.h
     include/currencycard.h
     include/assetcard.h
+    include/snapshotshistorypage.h
+    include/snapshotitemwidget.h
 )
 
 add_executable(${PROJECT_NAME} WIN32

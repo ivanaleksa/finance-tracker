@@ -7,6 +7,7 @@
 #include "withdrawalspage.h"
 #include "portfoliopage.h"
 #include "currenciespage.h"
+#include "snapshotshistorypage.h"
 #include "database.h"
 #include "config.h"
 #include <QFile>
@@ -158,6 +159,12 @@ void MainWindow::createInvestmentsButtons()
     connect(m_btnPortfolio, &QPushButton::clicked, this, &MainWindow::showPortfolio);
     layout->addWidget(m_btnPortfolio);
 
+    m_btnSnapshotsHistory = new QPushButton("📸 Снимки", m_investmentsButtonsContainer);
+    m_btnSnapshotsHistory->setObjectName("navButton");
+    m_btnSnapshotsHistory->setCursor(Qt::PointingHandCursor);
+    connect(m_btnSnapshotsHistory, &QPushButton::clicked, this, &MainWindow::showSnapshotsHistory);
+    layout->addWidget(m_btnSnapshotsHistory);
+
     m_btnWithdrawals = new QPushButton("💸 Выводы", m_investmentsButtonsContainer);
     m_btnWithdrawals->setObjectName("navButton");
     m_btnWithdrawals->setCursor(Qt::PointingHandCursor);
@@ -199,6 +206,10 @@ void MainWindow::createPages()
             this, &MainWindow::showPortfolio);
     connect(m_currenciesPage, &CurrenciesPage::currencyRatesChanged,
             this, &MainWindow::onCurrencyRatesChanged);
+
+    // Snapshots history page
+    m_snapshotsHistoryPage = new SnapshotsHistoryPage(this);
+    m_pageStack->addWidget(m_snapshotsHistoryPage);
 
     // Withdrawals page
     m_withdrawalsPage = new WithdrawalsPage(this);
@@ -304,6 +315,13 @@ void MainWindow::showWithdrawals()
     m_pageStack->setCurrentWidget(m_withdrawalsPage);
     setActiveButton(m_btnWithdrawals);
     m_withdrawalsPage->refreshData();
+}
+
+void MainWindow::showSnapshotsHistory()
+{
+    m_pageStack->setCurrentWidget(m_snapshotsHistoryPage);
+    setActiveButton(m_btnSnapshotsHistory);
+    m_snapshotsHistoryPage->refreshData();
 }
 
 void MainWindow::showCurrencies()
