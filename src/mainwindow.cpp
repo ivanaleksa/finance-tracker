@@ -8,6 +8,7 @@
 #include "portfoliopage.h"
 #include "currenciespage.h"
 #include "snapshotshistorypage.h"
+#include "investmentdashboardpage.h"
 #include "database.h"
 #include "config.h"
 #include <QFile>
@@ -153,6 +154,12 @@ void MainWindow::createInvestmentsButtons()
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(5);
 
+    m_btnInvestmentDashboard = new QPushButton("📊 Обзор", m_investmentsButtonsContainer);
+    m_btnInvestmentDashboard->setObjectName("navButton");
+    m_btnInvestmentDashboard->setCursor(Qt::PointingHandCursor);
+    connect(m_btnInvestmentDashboard, &QPushButton::clicked, this, &MainWindow::showInvestmentDashboard);
+    layout->addWidget(m_btnInvestmentDashboard);
+
     m_btnPortfolio = new QPushButton("💼 Портфель", m_investmentsButtonsContainer);
     m_btnPortfolio->setObjectName("navButton");
     m_btnPortfolio->setCursor(Qt::PointingHandCursor);
@@ -192,6 +199,10 @@ void MainWindow::createPages()
     m_pageStack->addWidget(m_transactionListPage);
     m_pageStack->addWidget(m_monthChartPage);
     m_pageStack->addWidget(m_yearChartPage);
+
+    // Investment dashboard page
+    m_investmentDashboardPage = new InvestmentDashboardPage(this);
+    m_pageStack->addWidget(m_investmentDashboardPage);
 
     // Portfolio page
     m_portfolioPage = new PortfolioPage(this);
@@ -266,7 +277,7 @@ void MainWindow::switchToReportingMode()
 void MainWindow::switchToInvestmentsMode()
 {
     setActiveMode(InvestmentsMode);
-    showPortfolio();
+    showInvestmentDashboard();
 }
 
 void MainWindow::showDashboard()
@@ -301,6 +312,13 @@ void MainWindow::showYearChart()
     m_pageStack->setCurrentWidget(m_yearChartPage);
     setActiveButton(m_btnYearChart);
     m_yearChartPage->refreshChart();
+}
+
+void MainWindow::showInvestmentDashboard()
+{
+    m_pageStack->setCurrentWidget(m_investmentDashboardPage);
+    setActiveButton(m_btnInvestmentDashboard);
+    m_investmentDashboardPage->refreshData();
 }
 
 void MainWindow::showPortfolio()
