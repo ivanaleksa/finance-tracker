@@ -62,6 +62,7 @@ void CurrenciesPage::setupUi()
     m_addBtn->setObjectName("primaryButton");
     m_addBtn->setCursor(Qt::PointingHandCursor);
     m_addBtn->setFixedSize(40, 40);
+    m_addBtn->setStyleSheet("padding: 0;");
     connect(m_addBtn, &QPushButton::clicked, this, &CurrenciesPage::onAddCurrencyClicked);
     topLayout->addWidget(m_addBtn);
 
