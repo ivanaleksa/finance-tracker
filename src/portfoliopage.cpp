@@ -160,56 +160,65 @@ void PortfolioPage::loadAssets()
     }
 
     // Create category sections
-    for (auto it = assetsByCategory.begin(); it != assetsByCategory.end(); ++it) {
-        QString categoryName = it.key();
-        QList<PortfolioAsset> categoryAssets = it.value();
+    if (assetsByCategory.count() == 0) {
+        QLabel *emptyLabel = new QLabel("Активы отсутствуют", this);
+        emptyLabel->setStyleSheet("font-size: 14px; color: #7f8c8d; padding: 40px;");
+        emptyLabel->setAlignment(Qt::AlignCenter);
+        m_cardsLayout->insertWidget(0, emptyLabel);
+        return;
+    }
+    else {
+        for (auto it = assetsByCategory.begin(); it != assetsByCategory.end(); ++it) {
+            QString categoryName = it.key();
+            QList<PortfolioAsset> categoryAssets = it.value();
 
-        // Category header
-        QWidget *headerWidget = new QWidget();
-        QHBoxLayout *headerLayout = new QHBoxLayout(headerWidget);
-        headerLayout->setContentsMargins(0, 10, 0, 5);
+            // Category header
+            QWidget *headerWidget = new QWidget();
+            QHBoxLayout *headerLayout = new QHBoxLayout(headerWidget);
+            headerLayout->setContentsMargins(0, 10, 0, 5);
 
-        QLabel *categoryLabel = new QLabel(categoryName, headerWidget);
-        categoryLabel->setStyleSheet("font-size: 16px; font-weight: bold; color: #2c3e50;");
-        headerLayout->addWidget(categoryLabel);
+            QLabel *categoryLabel = new QLabel(categoryName, headerWidget);
+            categoryLabel->setStyleSheet("font-size: 16px; font-weight: bold; color: #2c3e50;");
+            headerLayout->addWidget(categoryLabel);
 
-        // Separator line
-        QFrame *line = new QFrame(headerWidget);
-        line->setFrameShape(QFrame::HLine);
-        line->setStyleSheet("background-color: #bdc3c7;");
-        line->setFixedHeight(1);
-        headerLayout->addWidget(line, 1);
+            // Separator line
+            QFrame *line = new QFrame(headerWidget);
+            line->setFrameShape(QFrame::HLine);
+            line->setStyleSheet("background-color: #bdc3c7;");
+            line->setFixedHeight(1);
+            headerLayout->addWidget(line, 1);
 
-        // Insert before the stretch
-        m_cardsLayout->insertWidget(m_cardsLayout->count() - 1, headerWidget);
+            // Insert before the stretch
+            m_cardsLayout->insertWidget(m_cardsLayout->count() - 1, headerWidget);
 
-        // Cards container for this category (FlowLayout-like with wrap)
-        QWidget *cardsRow = new QWidget();
-        QHBoxLayout *rowLayout = new QHBoxLayout(cardsRow);
-        rowLayout->setContentsMargins(0, 0, 0, 0);
-        rowLayout->setSpacing(15);
-        rowLayout->setAlignment(Qt::AlignLeft);
+            // Cards container for this category (FlowLayout-like with wrap)
+            QWidget *cardsRow = new QWidget();
+            QHBoxLayout *rowLayout = new QHBoxLayout(cardsRow);
+            rowLayout->setContentsMargins(0, 0, 0, 0);
+            rowLayout->setSpacing(15);
+            rowLayout->setAlignment(Qt::AlignLeft);
 
-        // Create cards for each asset in this category
-        for (const PortfolioAsset& asset : categoryAssets) {
-            AssetCard *card = new AssetCard(asset, cardsRow);
+            // Create cards for each asset in this category
+            for (const PortfolioAsset& asset : categoryAssets) {
+                AssetCard *card = new AssetCard(asset, cardsRow);
 
-            connect(card, &AssetCard::clicked, this, [this, assetId = asset.id()]() {
-                onAssetCardClicked(assetId);
-            });
-            connect(card, &AssetCard::buyRequested, this, &PortfolioPage::onAssetBuyRequested);
-            connect(card, &AssetCard::sellRequested, this, &PortfolioPage::onAssetSellRequested);
-            connect(card, &AssetCard::deleteRequested, this, &PortfolioPage::onAssetDeleteRequested);
-            connect(card, &AssetCard::priceChanged, this, &PortfolioPage::onAssetPriceChanged);
+                connect(card, &AssetCard::clicked, this, [this, assetId = asset.id()]() {
+                    onAssetCardClicked(assetId);
+                });
+                connect(card, &AssetCard::buyRequested, this, &PortfolioPage::onAssetBuyRequested);
+                connect(card, &AssetCard::sellRequested, this, &PortfolioPage::onAssetSellRequested);
+                connect(card, &AssetCard::deleteRequested, this, &PortfolioPage::onAssetDeleteRequested);
+                connect(card, &AssetCard::priceChanged, this, &PortfolioPage::onAssetPriceChanged);
 
-            rowLayout->addWidget(card);
-            m_assetCards.append(card);
+                rowLayout->addWidget(card);
+                m_assetCards.append(card);
+            }
+
+            rowLayout->addStretch();
+
+            // Insert before the stretch
+            m_cardsLayout->insertWidget(m_cardsLayout->count() - 1, cardsRow);
         }
-
-        rowLayout->addStretch();
-
-        // Insert before the stretch
-        m_cardsLayout->insertWidget(m_cardsLayout->count() - 1, cardsRow);
     }
 }
 
