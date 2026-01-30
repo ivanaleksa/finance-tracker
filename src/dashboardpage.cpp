@@ -46,6 +46,7 @@ void DashboardPage::setupUi()
     m_yearSpin = new QSpinBox(this);
     m_yearSpin->setRange(2000, 2100);
     m_yearSpin->setValue(QDate::currentDate().year());
+    m_yearSpin->setButtonSymbols(QAbstractSpinBox::NoButtons);
     connect(m_yearSpin, QOverload<int>::of(&QSpinBox::valueChanged),
             this, &DashboardPage::onPeriodChanged);
     periodLayout->addWidget(m_yearSpin);

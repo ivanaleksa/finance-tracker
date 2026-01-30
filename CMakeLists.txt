@@ -47,7 +47,7 @@ set(SOURCES
     # Portfolio pages/dialogs
     src/portfoliopage.cpp
     src/addassetdialog.cpp
-    src/assetdetailsdialog.cpp
+    src/assethistorydialog.cpp
     src/addoperationdialog.cpp
     src/createsnapshotdialog.cpp
     src/currenciespage.cpp
@@ -89,7 +89,7 @@ set(HEADERS
     # Portfolio pages/dialogs
     include/portfoliopage.h
     include/addassetdialog.h
-    include/assetdetailsdialog.h
+    include/assethistorydialog.h
     include/addoperationdialog.h
     include/createsnapshotdialog.h
     include/currenciespage.h

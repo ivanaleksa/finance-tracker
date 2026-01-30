@@ -53,6 +53,7 @@ void WithdrawalsPage::setupUi()
     formLayout->addWidget(amountLabel);
 
     m_amountSpin = new QDoubleSpinBox(this);
+    m_amountSpin->setButtonSymbols(QAbstractSpinBox::NoButtons);
     m_amountSpin->setRange(0.01, 999999999.99);
     m_amountSpin->setDecimals(2);
     m_amountSpin->setSuffix(" ₽");

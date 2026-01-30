@@ -29,9 +29,9 @@ private slots:
     void onAddAssetClicked();
     void onCreateSnapshotClicked();
     void onCurrenciesClicked();
-    void onAssetCardClicked(int assetId);
     void onAssetBuyRequested(int assetId);
     void onAssetSellRequested(int assetId);
+    void onAssetHistoryRequested(int assetId);
     void onAssetDeleteRequested(int assetId);
     void onAssetPriceChanged(int assetId, double newPrice);
 

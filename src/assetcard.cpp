@@ -61,6 +61,7 @@ void AssetCard::setupUi()
     );
     m_menu->addAction("Купить", this, &AssetCard::onBuyClicked);
     m_menu->addAction("Продать", this, &AssetCard::onSellClicked);
+    m_menu->addAction("История", this, &AssetCard::onHistoryClicked);
     m_menu->addSeparator();
     m_menu->addAction("Удалить", this, &AssetCard::onDeleteClicked);
 
@@ -211,19 +212,6 @@ void AssetCard::updateDisplay()
     m_countryLabel->setText(m_asset.countryName());
 }
 
-void AssetCard::mousePressEvent(QMouseEvent *event)
-{
-    if (event->button() == Qt::LeftButton) {
-        // Don't emit click if clicking on menu button or price label/edit
-        QPoint pos = event->pos();
-        if (!m_menuBtn->geometry().contains(pos) &&
-            !m_currentPriceLabel->geometry().contains(m_currentPriceLabel->parentWidget()->mapFrom(this, pos)) &&
-            !m_priceEdit->geometry().contains(m_priceEdit->parentWidget()->mapFrom(this, pos))) {
-            emit clicked();
-        }
-    }
-    QWidget::mousePressEvent(event);
-}
 
 bool AssetCard::eventFilter(QObject *obj, QEvent *event)
 {
@@ -251,6 +239,11 @@ void AssetCard::onBuyClicked()
 void AssetCard::onSellClicked()
 {
     emit sellRequested(m_asset.id());
+}
+
+void AssetCard::onHistoryClicked()
+{
+    emit historyRequested(m_asset.id());
 }
 
 void AssetCard::onDeleteClicked()

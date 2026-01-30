@@ -1,6 +1,6 @@
 #include "portfoliopage.h"
 #include "addassetdialog.h"
-#include "assetdetailsdialog.h"
+#include "assethistorydialog.h"
 #include "addoperationdialog.h"
 #include "createsnapshotdialog.h"
 #include "database.h"
@@ -202,11 +202,9 @@ void PortfolioPage::loadAssets()
             for (const PortfolioAsset& asset : categoryAssets) {
                 AssetCard *card = new AssetCard(asset, cardsRow);
 
-                connect(card, &AssetCard::clicked, this, [this, assetId = asset.id()]() {
-                    onAssetCardClicked(assetId);
-                });
                 connect(card, &AssetCard::buyRequested, this, &PortfolioPage::onAssetBuyRequested);
                 connect(card, &AssetCard::sellRequested, this, &PortfolioPage::onAssetSellRequested);
+                connect(card, &AssetCard::historyRequested, this, &PortfolioPage::onAssetHistoryRequested);
                 connect(card, &AssetCard::deleteRequested, this, &PortfolioPage::onAssetDeleteRequested);
                 connect(card, &AssetCard::priceChanged, this, &PortfolioPage::onAssetPriceChanged);
 
@@ -252,9 +250,9 @@ void PortfolioPage::onCurrenciesClicked()
     emit currenciesPageRequested();
 }
 
-void PortfolioPage::onAssetCardClicked(int assetId)
+void PortfolioPage::onAssetHistoryRequested(int assetId)
 {
-    AssetDetailsDialog dialog(assetId, this);
+    AssetHistoryDialog dialog(assetId, this);
     dialog.exec();
 }
 

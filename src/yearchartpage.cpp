@@ -47,6 +47,7 @@ void YearChartPage::setupUi()
     
     m_yearSpin = new QSpinBox(this);
     m_yearSpin->setRange(2000, 2100);
+    m_yearSpin->setButtonSymbols(QAbstractSpinBox::NoButtons);
     m_yearSpin->setValue(QDate::currentDate().year());
     connect(m_yearSpin, QOverload<int>::of(&QSpinBox::valueChanged),
             this, &YearChartPage::onFilterChanged);

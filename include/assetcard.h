@@ -19,14 +19,13 @@ public:
     void updateAsset(const PortfolioAsset& asset);
 
 signals:
-    void clicked();
     void buyRequested(int assetId);
     void sellRequested(int assetId);
     void deleteRequested(int assetId);
+    void historyRequested(int assetId);
     void priceChanged(int assetId, double newPrice);
 
 protected:
-    void mousePressEvent(QMouseEvent *event) override;
     void paintEvent(QPaintEvent *event) override;
     bool eventFilter(QObject *obj, QEvent *event) override;
 
@@ -34,6 +33,7 @@ private slots:
     void onMenuButtonClicked();
     void onBuyClicked();
     void onSellClicked();
+    void onHistoryClicked();
     void onDeleteClicked();
     void onPriceLabelClicked();
     void onPriceEditFinished();
