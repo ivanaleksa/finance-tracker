@@ -58,7 +58,7 @@ void MainWindow::createNavigationPanel()
     m_navLayout->setSpacing(5);
 
     // Logo and title
-    QLabel *titleLabel = new QLabel("AlexFincance", m_navPanel);
+    QLabel *titleLabel = new QLabel("AlexFinance", m_navPanel);
     titleLabel->setObjectName("navTitle");
     titleLabel->setAlignment(Qt::AlignCenter);
     m_navLayout->addWidget(titleLabel);
