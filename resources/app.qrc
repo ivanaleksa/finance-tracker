@@ -1,5 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>icons/app.png</file>
+        <file>fonts/Ubuntu-Regular.ttf</file>
+        <file>fonts/Ubuntu-Bold.ttf</file>
     </qresource>
 </RCC>

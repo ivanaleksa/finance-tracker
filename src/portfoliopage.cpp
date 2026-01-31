@@ -3,6 +3,7 @@
 #include "assethistorydialog.h"
 #include "addoperationdialog.h"
 #include "createsnapshotdialog.h"
+#include "flowlayout.h"
 #include "database.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -191,12 +192,9 @@ void PortfolioPage::loadAssets()
             // Insert before the stretch
             m_cardsLayout->insertWidget(m_cardsLayout->count() - 1, headerWidget);
 
-            // Cards container for this category (FlowLayout-like with wrap)
+            // Cards container for this category with flow layout (auto wrap)
             QWidget *cardsRow = new QWidget();
-            QHBoxLayout *rowLayout = new QHBoxLayout(cardsRow);
-            rowLayout->setContentsMargins(0, 0, 0, 0);
-            rowLayout->setSpacing(15);
-            rowLayout->setAlignment(Qt::AlignLeft);
+            FlowLayout *rowLayout = new FlowLayout(cardsRow, 0, 15, 15);
 
             // Create cards for each asset in this category
             for (const PortfolioAsset& asset : categoryAssets) {
@@ -211,8 +209,6 @@ void PortfolioPage::loadAssets()
                 rowLayout->addWidget(card);
                 m_assetCards.append(card);
             }
-
-            rowLayout->addStretch();
 
             // Insert before the stretch
             m_cardsLayout->insertWidget(m_cardsLayout->count() - 1, cardsRow);

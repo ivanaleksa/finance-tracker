@@ -1,7 +1,7 @@
 /* Основные стили приложения */
 
 * {
-    font-family: "Segoe UI", "Ubuntu", "Noto Sans", sans-serif;
+    font-family: "Ubuntu", "Segoe UI", sans-serif;
 }
 
 QMainWindow {
@@ -70,8 +70,8 @@ QMainWindow {
     color: #7f8c8d;
     border: none;
     border-radius: 6px;
-    padding: 8px 12px;
-    font-size: 12px;
+    padding: 8px 8px;
+    font-size: 11px;
     font-weight: bold;
 }
 
@@ -109,9 +109,7 @@ QMainWindow {
     border-radius: 10px;
 }
 
-#filterPanel {
-    max-height: 70px;
-}
+/* filterPanel без ограничения высоты */
 
 /* Кнопки */
 #primaryButton {

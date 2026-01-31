@@ -30,6 +30,7 @@ set(SOURCES
     src/undonotification.cpp
     src/piechart.cpp
     src/barchart.cpp
+    src/flowlayout.cpp
     src/categorymanagerdialog.cpp
     # Investment models
     src/investmentcategory.cpp
@@ -75,6 +76,7 @@ set(HEADERS
     include/undonotification.h
     include/piechart.h
     include/barchart.h
+    include/flowlayout.h
     include/categorymanagerdialog.h
     # Investment models
     include/investmentcategory.h

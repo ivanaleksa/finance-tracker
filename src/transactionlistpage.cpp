@@ -31,8 +31,8 @@ void TransactionListPage::setupUi()
     QWidget *filterWidget = new QWidget(this);
     filterWidget->setObjectName("filterPanel");
     QHBoxLayout *filterLayout = new QHBoxLayout(filterWidget);
-    filterLayout->setContentsMargins(20, 15, 20, 15);
-    filterLayout->setSpacing(15);
+    filterLayout->setContentsMargins(10, 10, 10, 10);
+    filterLayout->setSpacing(10);
     
     // period
     QLabel *fromLabel = new QLabel("С:", this);
@@ -57,7 +57,7 @@ void TransactionListPage::setupUi()
     connect(m_toDateEdit, &QDateEdit::dateChanged, this, &TransactionListPage::onFilterChanged);
     filterLayout->addWidget(m_toDateEdit);
     
-    filterLayout->addSpacing(20);
+    filterLayout->addSpacing(10);
     
     // type
     QLabel *typeLabel = new QLabel("Тип:", this);
@@ -72,22 +72,23 @@ void TransactionListPage::setupUi()
             this, &TransactionListPage::onFilterChanged);
     filterLayout->addWidget(m_typeCombo);
     
-    filterLayout->addSpacing(20);
+    filterLayout->addSpacing(10);
     
     // category
     QLabel *catLabel = new QLabel("Категория:", this);
     filterLayout->addWidget(catLabel);
     
     m_categoryCombo = new CategoryComboBox(this);
-    m_categoryCombo->setMinimumWidth(180);
+    m_categoryCombo->setMinimumWidth(150);
+    m_categoryCombo->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     m_categoryCombo->loadCategories(true);
     connect(m_categoryCombo, &CategoryComboBox::categorySelected, this, &TransactionListPage::onFilterChanged);
     connect(m_categoryCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &TransactionListPage::onFilterChanged);
     filterLayout->addWidget(m_categoryCombo);
-    
+
     filterLayout->addStretch();
-    
+
     // reset button
     m_clearFiltersBtn = new QPushButton("Сбросить", this);
     m_clearFiltersBtn->setObjectName("secondaryButton");

@@ -1,9 +1,9 @@
 #include <QApplication>
 #include <QMessageBox>
-#include <QDir>
-#include <QDebug>
 #include <QPalette>
 #include <QIcon>
+#include <QFontDatabase>
+#include <QFont>
 #include "mainwindow.h"
 #include "database.h"
 #include "config.h"
@@ -12,7 +12,19 @@ int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    // set cumpolsury light theme
+    // Load embedded fonts
+    int regularId = QFontDatabase::addApplicationFont(":/fonts/Ubuntu-Regular.ttf");
+    int boldId = QFontDatabase::addApplicationFont(":/fonts/Ubuntu-Bold.ttf");
+
+    if (regularId != -1 && boldId != -1) {
+        QStringList families = QFontDatabase::applicationFontFamilies(regularId);
+        if (!families.isEmpty()) {
+            QFont appFont(families.first(), 10);
+            app.setFont(appFont);
+        }
+    }
+
+    // set compulsory light theme
     QPalette lightPalette;
     lightPalette.setColor(QPalette::Window, QColor(240, 240, 240));
     lightPalette.setColor(QPalette::WindowText, QColor(0, 0, 0));
