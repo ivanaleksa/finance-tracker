@@ -261,26 +261,18 @@ void InvestmentDashboardPage::updateSummary()
     QList<PortfolioAsset> assets = Database::instance().getActivePortfolioAssets();
 
     double totalValueRub = 0.0;
-    double totalInvestedRub = 0.0;
 
     for (const PortfolioAsset& asset : assets) {
         double rate = m_currencyRates.value(asset.currencyId(), 1.0);
 
-        // Skip currency assets (no yield calculation)
-        if (asset.isCurrencyAsset()) {
-            totalValueRub += asset.currentPrice() * asset.totalQuantity() * rate;
-            totalInvestedRub += asset.currentPrice() * asset.totalQuantity() * rate;
-            continue;
-        }
-
-        // Current value
+        // Current value of all assets
         totalValueRub += asset.currentPrice() * asset.totalQuantity() * rate;
-
-        // Invested = current quantity * average buy price (already calculated correctly)
-        totalInvestedRub += asset.totalInvested() * rate;
     }
 
-    // Profit = Current value - Invested (for current holdings)
+    // Invested = Total deposits - Total withdrawals (external money flow)
+    double totalInvestedRub = Database::instance().getTotalDeposits() - Database::instance().getTotalWithdrawals();
+
+    // Profit = Current value - Net invested
     double profitRub = totalValueRub - totalInvestedRub;
     double profitPercent = totalInvestedRub > 0 ? (profitRub / totalInvestedRub) * 100.0 : 0.0;
 

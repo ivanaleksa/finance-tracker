@@ -38,12 +38,15 @@ set(SOURCES
     src/snapshotposition.cpp
     src/snapshot.cpp
     src/withdrawal.cpp
+    src/deposit.cpp
     # Portfolio models
     src/portfolioasset.cpp
     src/assetoperation.cpp
     # Investment pages
     src/withdrawalspage.cpp
     src/withdrawalundonotification.cpp
+    src/depositspage.cpp
+    src/depositundonotification.cpp
     # Portfolio pages/dialogs
     src/portfoliopage.cpp
     src/addassetdialog.cpp
@@ -80,12 +83,15 @@ set(HEADERS
     include/snapshotposition.h
     include/snapshot.h
     include/withdrawal.h
+    include/deposit.h
     # Portfolio models
     include/portfolioasset.h
     include/assetoperation.h
     # Investment pages
     include/withdrawalspage.h
     include/withdrawalundonotification.h
+    include/depositspage.h
+    include/depositundonotification.h
     # Portfolio pages/dialogs
     include/portfoliopage.h
     include/addassetdialog.h

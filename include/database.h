@@ -13,6 +13,7 @@
 #include "snapshot.h"
 #include "snapshotposition.h"
 #include "withdrawal.h"
+#include "deposit.h"
 #include "portfolioasset.h"
 #include "assetoperation.h"
 
@@ -99,6 +100,15 @@ public:
     Withdrawal getWithdrawal(int id);
     double getTotalWithdrawals();
 
+    // Deposits
+    bool addDeposit(Deposit& deposit);
+    bool deleteDeposit(int id);
+    bool deleteDepositByTransactionId(int transactionId);
+    QList<Deposit> getDeposits();
+    Deposit getDeposit(int id);
+    Deposit getDepositByTransactionId(int transactionId);
+    double getTotalDeposits();
+
     // Portfolio statistics
     double getPortfolioReturn();
 
@@ -138,6 +148,8 @@ signals:
     void snapshotDeleted(int id);
     void withdrawalAdded(const Withdrawal& withdrawal);
     void withdrawalDeleted(int id);
+    void depositAdded(const Deposit& deposit);
+    void depositDeleted(int id);
 
     // Portfolio signals
     void portfolioAssetAdded(const PortfolioAsset& asset);

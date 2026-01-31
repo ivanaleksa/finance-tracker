@@ -5,6 +5,7 @@
 #include "monthchartpage.h"
 #include "yearchartpage.h"
 #include "withdrawalspage.h"
+#include "depositspage.h"
 #include "portfoliopage.h"
 #include "currenciespage.h"
 #include "snapshotshistorypage.h"
@@ -178,6 +179,12 @@ void MainWindow::createInvestmentsButtons()
     connect(m_btnWithdrawals, &QPushButton::clicked, this, &MainWindow::showWithdrawals);
     layout->addWidget(m_btnWithdrawals);
 
+    m_btnDeposits = new QPushButton("💰 Пополнения", m_investmentsButtonsContainer);
+    m_btnDeposits->setObjectName("navButton");
+    m_btnDeposits->setCursor(Qt::PointingHandCursor);
+    connect(m_btnDeposits, &QPushButton::clicked, this, &MainWindow::showDeposits);
+    layout->addWidget(m_btnDeposits);
+
     // Hide by default
     m_investmentsButtonsContainer->hide();
 }
@@ -225,6 +232,10 @@ void MainWindow::createPages()
     // Withdrawals page
     m_withdrawalsPage = new WithdrawalsPage(this);
     m_pageStack->addWidget(m_withdrawalsPage);
+
+    // Deposits page
+    m_depositsPage = new DepositsPage(this);
+    m_pageStack->addWidget(m_depositsPage);
 
     // db linking
     connect(&Database::instance(), &Database::dataChanged, m_dashboardPage, &DashboardPage::refreshData);
@@ -333,6 +344,13 @@ void MainWindow::showWithdrawals()
     m_pageStack->setCurrentWidget(m_withdrawalsPage);
     setActiveButton(m_btnWithdrawals);
     m_withdrawalsPage->refreshData();
+}
+
+void MainWindow::showDeposits()
+{
+    m_pageStack->setCurrentWidget(m_depositsPage);
+    setActiveButton(m_btnDeposits);
+    m_depositsPage->refreshData();
 }
 
 void MainWindow::showSnapshotsHistory()

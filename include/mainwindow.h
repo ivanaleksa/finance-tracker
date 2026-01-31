@@ -13,6 +13,7 @@ class TransactionListPage;
 class MonthChartPage;
 class YearChartPage;
 class WithdrawalsPage;
+class DepositsPage;
 class PortfolioPage;
 class CurrenciesPage;
 class SnapshotsHistoryPage;
@@ -43,6 +44,7 @@ private slots:
     void showPortfolio();
     void showCurrencies();
     void showWithdrawals();
+    void showDeposits();
     void showSnapshotsHistory();
     void onCurrencyRatesChanged();
 
@@ -89,6 +91,7 @@ private:
     QPushButton *m_btnPortfolio;
     QPushButton *m_btnSnapshotsHistory;
     QPushButton *m_btnWithdrawals;
+    QPushButton *m_btnDeposits;
 
     // Reporting pages
     DashboardPage *m_dashboardPage;
@@ -103,6 +106,7 @@ private:
     CurrenciesPage *m_currenciesPage;
     SnapshotsHistoryPage *m_snapshotsHistoryPage;
     WithdrawalsPage *m_withdrawalsPage;
+    DepositsPage *m_depositsPage;
 };
 
 #endif // MAINWINDOW_H

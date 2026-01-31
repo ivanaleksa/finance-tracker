@@ -284,12 +284,12 @@ bool Database::deleteTransaction(int id)
     QSqlQuery query;
     query.prepare("DELETE FROM transactions WHERE id = :id");
     query.bindValue(":id", id);
-    
+
     if (!query.exec()) {
         qWarning() << "Ошибка удаления транзакции:" << query.lastError().text();
         return false;
     }
-    
+
     emit transactionDeleted(id);
     emit dataChanged();
     return true;
@@ -818,11 +818,27 @@ bool Database::createInvestmentTables()
         return false;
     }
 
+    // Deposits table
+    if (!query.exec(R"(
+        CREATE TABLE IF NOT EXISTS deposits (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date TEXT NOT NULL,
+            amount REAL NOT NULL,
+            comment TEXT,
+            transaction_id INTEGER,
+            FOREIGN KEY (transaction_id) REFERENCES transactions(id)
+        )
+    )")) {
+        qWarning() << "Error creating deposits:" << query.lastError().text();
+        return false;
+    }
+
     // Indexes
     query.exec("CREATE INDEX IF NOT EXISTS idx_snapshots_date ON snapshots(date)");
     query.exec("CREATE INDEX IF NOT EXISTS idx_snapshot_positions_snapshot ON snapshot_positions(snapshot_id)");
     query.exec("CREATE INDEX IF NOT EXISTS idx_snapshot_rates_snapshot ON snapshot_currency_rates(snapshot_id)");
     query.exec("CREATE INDEX IF NOT EXISTS idx_withdrawals_date ON withdrawals(date)");
+    query.exec("CREATE INDEX IF NOT EXISTS idx_deposits_date ON deposits(date)");
 
     return true;
 }
@@ -1439,6 +1455,121 @@ double Database::getTotalWithdrawals()
 {
     QSqlQuery query;
     query.prepare("SELECT COALESCE(SUM(amount), 0) FROM withdrawals");
+
+    if (query.exec() && query.next()) {
+        return query.value(0).toDouble();
+    }
+
+    return 0.0;
+}
+
+// ========== DEPOSITS ==========
+
+bool Database::addDeposit(Deposit& deposit)
+{
+    QSqlQuery query;
+    query.prepare("INSERT INTO deposits (date, amount, comment, transaction_id) VALUES (:date, :amount, :comment, :transaction_id)");
+    query.bindValue(":date", deposit.date().toString(Qt::ISODate));
+    query.bindValue(":amount", deposit.amount());
+    query.bindValue(":comment", deposit.comment());
+    query.bindValue(":transaction_id", deposit.transactionId() >= 0 ? deposit.transactionId() : QVariant());
+
+    if (!query.exec()) {
+        qWarning() << "Error adding deposit:" << query.lastError().text();
+        return false;
+    }
+
+    deposit.setId(query.lastInsertId().toInt());
+    emit depositAdded(deposit);
+    emit investmentDataChanged();
+    return true;
+}
+
+bool Database::deleteDeposit(int id)
+{
+    QSqlQuery query;
+    query.prepare("DELETE FROM deposits WHERE id = :id");
+    query.bindValue(":id", id);
+
+    if (!query.exec()) {
+        qWarning() << "Error deleting deposit:" << query.lastError().text();
+        return false;
+    }
+
+    emit depositDeleted(id);
+    emit investmentDataChanged();
+    return true;
+}
+
+bool Database::deleteDepositByTransactionId(int transactionId)
+{
+    Deposit deposit = getDepositByTransactionId(transactionId);
+    if (!deposit.isValid()) {
+        return true; // No deposit linked to this transaction
+    }
+    return deleteDeposit(deposit.id());
+}
+
+QList<Deposit> Database::getDeposits()
+{
+    QList<Deposit> result;
+
+    QSqlQuery query("SELECT id, date, amount, comment, transaction_id FROM deposits ORDER BY date DESC, id DESC");
+    while (query.next()) {
+        result.append(Deposit(
+            query.value(0).toInt(),
+            QDate::fromString(query.value(1).toString(), Qt::ISODate),
+            query.value(2).toDouble(),
+            query.value(3).toString(),
+            query.value(4).isNull() ? -1 : query.value(4).toInt()
+        ));
+    }
+
+    return result;
+}
+
+Deposit Database::getDeposit(int id)
+{
+    QSqlQuery query;
+    query.prepare("SELECT id, date, amount, comment, transaction_id FROM deposits WHERE id = :id");
+    query.bindValue(":id", id);
+
+    if (query.exec() && query.next()) {
+        return Deposit(
+            query.value(0).toInt(),
+            QDate::fromString(query.value(1).toString(), Qt::ISODate),
+            query.value(2).toDouble(),
+            query.value(3).toString(),
+            query.value(4).isNull() ? -1 : query.value(4).toInt()
+        );
+    }
+
+    return Deposit();
+}
+
+Deposit Database::getDepositByTransactionId(int transactionId)
+{
+    QSqlQuery query;
+    query.prepare("SELECT id, date, amount, comment, transaction_id FROM deposits WHERE transaction_id = :tid");
+    query.bindValue(":tid", transactionId);
+
+    if (query.exec() && query.next()) {
+        return Deposit(
+            query.value(0).toInt(),
+            QDate::fromString(query.value(1).toString(), Qt::ISODate),
+            query.value(2).toDouble(),
+            query.value(3).toString(),
+            query.value(4).isNull() ? -1 : query.value(4).toInt()
+        );
+    }
+
+    return Deposit();
+}
+
+double Database::getTotalDeposits()
+{
+    QSqlQuery query;
+    query.prepare("SELECT COALESCE(SUM(amount), 0) FROM deposits");
 
     if (query.exec() && query.next()) {
         return query.value(0).toDouble();
