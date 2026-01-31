@@ -191,22 +191,39 @@ void AssetCard::updateDisplay()
 {
     m_nameLabel->setText(m_asset.name());
     m_quantityLabel->setText(QString::number(m_asset.totalQuantity(), 'f', 2));
-    m_avgPriceLabel->setText(QString::number(m_asset.averageBuyPrice(), 'f', 6));
-    m_currentPriceLabel->setText(QString::number(m_asset.currentPrice(), 'f', 6));
     m_valueLabel->setText(QString::number(m_asset.currentValue(), 'f', 2));
 
-    double yieldPct = m_asset.yieldPercent();
-    double profitRub = m_asset.profitInRub();
+    // For currency assets, don't show yield/profit
+    if (m_asset.isCurrencyAsset()) {
+        m_avgPriceLabel->setText("—");
+        m_currentPriceLabel->setText("—");
+        m_currentPriceLabel->setCursor(Qt::ArrowCursor);
+        m_currentPriceLabel->setToolTip("");
 
-    // Color based on profit
-    QString profitColor = yieldPct >= 0 ? "#27ae60" : "#e74c3c";
-    QString profitSign = yieldPct >= 0 ? "+" : "";
+        m_profitPercentLabel->setText("—");
+        m_profitPercentLabel->setStyleSheet("font-size: 12px; color: #95a5a6;");
 
-    m_profitPercentLabel->setText(QString("%1%2%").arg(profitSign).arg(yieldPct, 0, 'f', 2));
-    m_profitPercentLabel->setStyleSheet(QString("font-size: 12px; font-weight: bold; color: %1;").arg(profitColor));
+        m_profitRubLabel->setText("—");
+        m_profitRubLabel->setStyleSheet("font-size: 12px; color: #95a5a6;");
+    } else {
+        m_avgPriceLabel->setText(QString::number(m_asset.averageBuyPrice(), 'f', 6));
+        m_currentPriceLabel->setText(QString::number(m_asset.currentPrice(), 'f', 6));
+        m_currentPriceLabel->setCursor(Qt::PointingHandCursor);
+        m_currentPriceLabel->setToolTip("Нажмите для изменения");
 
-    m_profitRubLabel->setText(QString("%1%2 ₽").arg(profitSign).arg(profitRub, 0, 'f', 2));
-    m_profitRubLabel->setStyleSheet(QString("font-size: 12px; font-weight: bold; color: %1;").arg(profitColor));
+        double yieldPct = m_asset.yieldPercent();
+        double profitRub = m_asset.profitInRub();
+
+        // Color based on profit
+        QString profitColor = yieldPct >= 0 ? "#27ae60" : "#e74c3c";
+        QString profitSign = yieldPct >= 0 ? "+" : "";
+
+        m_profitPercentLabel->setText(QString("%1%2%").arg(profitSign).arg(yieldPct, 0, 'f', 2));
+        m_profitPercentLabel->setStyleSheet(QString("font-size: 12px; font-weight: bold; color: %1;").arg(profitColor));
+
+        m_profitRubLabel->setText(QString("%1%2 ₽").arg(profitSign).arg(profitRub, 0, 'f', 2));
+        m_profitRubLabel->setStyleSheet(QString("font-size: 12px; font-weight: bold; color: %1;").arg(profitColor));
+    }
 
     m_currencyLabel->setText(m_asset.currencyCode());
     m_countryLabel->setText(m_asset.countryName());
@@ -253,6 +270,11 @@ void AssetCard::onDeleteClicked()
 
 void AssetCard::onPriceLabelClicked()
 {
+    // Don't allow price editing for currency assets
+    if (m_asset.isCurrencyAsset()) {
+        return;
+    }
+
     m_currentPriceLabel->hide();
     m_priceEdit->setText(QString::number(m_asset.currentPrice(), 'f', 6));
     m_priceEdit->show();

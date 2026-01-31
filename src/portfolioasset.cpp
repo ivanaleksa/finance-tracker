@@ -67,6 +67,11 @@ double PortfolioAsset::profitInRub() const
     return profit() * m_currencyRate;
 }
 
+bool PortfolioAsset::isCurrencyAsset() const
+{
+    return m_categoryName.toLower() == "валюта" || m_categoryName.toLower() == "валюты";
+}
+
 bool PortfolioAsset::isValid() const
 {
     return !m_name.isEmpty() && m_currencyId >= 0;

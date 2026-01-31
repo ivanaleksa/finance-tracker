@@ -70,6 +70,9 @@ public:
     double currentValueInRub() const;
     double profitInRub() const;
 
+    // Check if asset is currency type (no yield calculation)
+    bool isCurrencyAsset() const;
+
     bool isValid() const;
 
 private:
