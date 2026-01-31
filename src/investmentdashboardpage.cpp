@@ -180,6 +180,7 @@ void InvestmentDashboardPage::setupUi()
     m_pieTypeCombo = new QComboBox(pieChartFrame);
     m_pieTypeCombo->addItem("По активам", 0);
     m_pieTypeCombo->addItem("По валютам", 1);
+    m_pieTypeCombo->addItem("По типам", 2);
     connect(m_pieTypeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &InvestmentDashboardPage::onPieTypeChanged);
     pieHeaderLayout->addWidget(m_pieTypeCombo);
@@ -261,28 +262,26 @@ void InvestmentDashboardPage::updateSummary()
 
     double totalValueRub = 0.0;
     double totalInvestedRub = 0.0;
-    double totalSoldRub = 0.0;
 
     for (const PortfolioAsset& asset : assets) {
         double rate = m_currencyRates.value(asset.currencyId(), 1.0);
 
+        // Skip currency assets (no yield calculation)
+        if (asset.isCurrencyAsset()) {
+            totalValueRub += asset.currentPrice() * asset.totalQuantity() * rate;
+            totalInvestedRub += asset.currentPrice() * asset.totalQuantity() * rate;
+            continue;
+        }
+
         // Current value
         totalValueRub += asset.currentPrice() * asset.totalQuantity() * rate;
 
-        // Get all operations for this asset
-        QList<AssetOperation> operations = Database::instance().getAssetOperations(asset.id());
-        for (const AssetOperation& op : operations) {
-            double opValueRub = op.price() * op.quantity() * rate;
-            if (op.type() == AssetOperation::Type::Buy) {
-                totalInvestedRub += opValueRub;
-            } else {
-                totalSoldRub += opValueRub;
-            }
-        }
+        // Invested = current quantity * average buy price (already calculated correctly)
+        totalInvestedRub += asset.totalInvested() * rate;
     }
 
-    // Profit = Current value + Sold - Invested
-    double profitRub = totalValueRub + totalSoldRub - totalInvestedRub;
+    // Profit = Current value - Invested (for current holdings)
+    double profitRub = totalValueRub - totalInvestedRub;
     double profitPercent = totalInvestedRub > 0 ? (profitRub / totalInvestedRub) * 100.0 : 0.0;
 
     // Convert to selected currency
@@ -365,7 +364,7 @@ void InvestmentDashboardPage::updatePieChart()
 
             data[asset.name()] = valueRub;
         }
-    } else {
+    } else if (pieType == 1) {
         // By currencies
         QMap<int, double> byCurrency;
         for (const PortfolioAsset& asset : assets) {
@@ -380,6 +379,20 @@ void InvestmentDashboardPage::updatePieChart()
         for (auto it = byCurrency.begin(); it != byCurrency.end(); ++it) {
             Currency curr = Database::instance().getCurrency(it.key());
             data[curr.code()] = it.value();
+        }
+    } else {
+        // By category (asset type)
+        for (const PortfolioAsset& asset : assets) {
+            if (asset.totalQuantity() <= 0) continue;
+
+            double rate = m_currencyRates.value(asset.currencyId(), 1.0);
+            double valueRub = asset.currentPrice() * asset.totalQuantity() * rate;
+
+            QString categoryName = asset.categoryName();
+            if (categoryName.isEmpty()) {
+                categoryName = "Без категории";
+            }
+            data[categoryName] += valueRub;
         }
     }
 

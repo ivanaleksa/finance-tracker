@@ -1873,19 +1873,26 @@ double Database::getAssetTotalQuantity(int assetId)
 
 double Database::getAssetTotalInvested(int assetId)
 {
-    QSqlQuery query;
-    query.prepare(R"(
-        SELECT COALESCE(SUM(quantity * price), 0)
+    // Get average buy price (weighted average of all purchases)
+    QSqlQuery avgQuery;
+    avgQuery.prepare(R"(
+        SELECT COALESCE(SUM(quantity * price) / NULLIF(SUM(quantity), 0), 0)
         FROM asset_operations
         WHERE asset_id = :asset_id AND type = 'buy'
     )");
-    query.bindValue(":asset_id", assetId);
+    avgQuery.bindValue(":asset_id", assetId);
 
-    if (query.exec() && query.next()) {
-        return query.value(0).toDouble();
+    double avgBuyPrice = 0.0;
+    if (avgQuery.exec() && avgQuery.next()) {
+        avgBuyPrice = avgQuery.value(0).toDouble();
     }
 
-    return 0.0;
+    // Get current quantity (buys - sells)
+    double currentQuantity = getAssetTotalQuantity(assetId);
+
+    // Total invested = current quantity * average buy price
+    // This correctly accounts for sold portions
+    return currentQuantity * avgBuyPrice;
 }
 
 // ========== SNAPSHOT FROM PORTFOLIO ==========
