@@ -34,11 +34,13 @@ private:
 
     Snapshot m_snapshot;
     bool m_expanded = false;
+    QString m_fullDescription;
 
     // Header (always visible)
     QWidget *m_headerWidget;
     QLabel *m_dateLabel;
     QLabel *m_descriptionLabel;
+    QLabel *m_fullDescriptionLabel;  // Shown when expanded
     QLabel *m_totalLabel;
     QPushButton *m_expandBtn;
     QPushButton *m_deleteBtn;

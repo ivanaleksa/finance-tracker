@@ -44,11 +44,19 @@ void SnapshotItemWidget::setupUi()
     m_dateLabel->setFixedWidth(100);
     headerLayout->addWidget(m_dateLabel);
 
-    // Description
+    // Description (truncated in header)
+    m_fullDescription = m_snapshot.description().isEmpty() ? "—" : m_snapshot.description();
     m_descriptionLabel = new QLabel(this);
-    QString desc = m_snapshot.description().isEmpty() ? "—" : m_snapshot.description();
-    m_descriptionLabel->setText(desc);
+    m_descriptionLabel->setText(m_fullDescription);
     m_descriptionLabel->setStyleSheet("font-size: 13px; color: #7f8c8d;");
+    m_descriptionLabel->setTextFormat(Qt::PlainText);
+    m_descriptionLabel->setWordWrap(false);
+    // Elide text if too long
+    QFontMetrics fm(m_descriptionLabel->font());
+    m_descriptionLabel->setMinimumWidth(50);
+    m_descriptionLabel->setMaximumWidth(300);
+    QString elidedText = fm.elidedText(m_fullDescription, Qt::ElideRight, 280);
+    m_descriptionLabel->setText(elidedText);
     headerLayout->addWidget(m_descriptionLabel, 1);
 
     // Total value
@@ -96,6 +104,17 @@ void SnapshotItemWidget::setupUi()
     separator->setFixedHeight(1);
     contentLayout->addWidget(separator);
 
+    // Full description (shown when expanded)
+    if (!m_snapshot.description().isEmpty()) {
+        m_fullDescriptionLabel = new QLabel(this);
+        m_fullDescriptionLabel->setText(m_fullDescription);
+        m_fullDescriptionLabel->setStyleSheet("font-size: 13px; color: #7f8c8d; padding: 5px 0;");
+        m_fullDescriptionLabel->setWordWrap(true);
+        contentLayout->addWidget(m_fullDescriptionLabel);
+    } else {
+        m_fullDescriptionLabel = nullptr;
+    }
+
     // Positions table
     QLabel *positionsTitle = new QLabel("Позиции", this);
     positionsTitle->setStyleSheet("font-size: 13px; font-weight: bold; color: #2c3e50;");
@@ -113,7 +132,8 @@ void SnapshotItemWidget::setupUi()
     m_positionsTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_positionsTable->setSelectionMode(QAbstractItemView::NoSelection);
     m_positionsTable->setAlternatingRowColors(true);
-    m_positionsTable->setMaximumHeight(200);
+    m_positionsTable->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_positionsTable->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     // Fill positions
     QList<SnapshotPosition> positions = m_snapshot.positions();
@@ -145,6 +165,13 @@ void SnapshotItemWidget::setupUi()
         m_positionsTable->setItem(i, 4, valueItem);
     }
 
+    // Auto-size table height
+    int posTableHeight = m_positionsTable->horizontalHeader()->height() + 2;
+    for (int i = 0; i < m_positionsTable->rowCount(); ++i) {
+        posTableHeight += m_positionsTable->rowHeight(i);
+    }
+    m_positionsTable->setFixedHeight(posTableHeight);
+
     contentLayout->addWidget(m_positionsTable);
 
     // Currency rates table
@@ -160,7 +187,8 @@ void SnapshotItemWidget::setupUi()
     m_currenciesTable->verticalHeader()->setVisible(false);
     m_currenciesTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_currenciesTable->setSelectionMode(QAbstractItemView::NoSelection);
-    m_currenciesTable->setMaximumHeight(100);
+    m_currenciesTable->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_currenciesTable->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     // Fill currency rates
     QMap<int, double> rates = m_snapshot.currencyRates();
@@ -174,6 +202,13 @@ void SnapshotItemWidget::setupUi()
         rateItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
         m_currenciesTable->setItem(row, 1, rateItem);
     }
+
+    // Auto-size table height
+    int currTableHeight = m_currenciesTable->horizontalHeader()->height() + 2;
+    for (int i = 0; i < m_currenciesTable->rowCount(); ++i) {
+        currTableHeight += m_currenciesTable->rowHeight(i);
+    }
+    m_currenciesTable->setFixedHeight(currTableHeight);
 
     contentLayout->addWidget(m_currenciesTable);
 
