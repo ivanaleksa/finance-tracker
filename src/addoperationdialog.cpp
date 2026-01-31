@@ -48,8 +48,8 @@ void AddOperationDialog::setupUi()
 
     // Price
     m_priceSpin = new QDoubleSpinBox(this);
-    m_priceSpin->setDecimals(2);
-    m_priceSpin->setRange(0.0, 999999999.99);
+    m_priceSpin->setDecimals(6);
+    m_priceSpin->setRange(0.0, 999999999.999999);
     m_priceSpin->setButtonSymbols(QAbstractSpinBox::NoButtons);
     connect(m_priceSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &AddOperationDialog::updateTotalLabel);

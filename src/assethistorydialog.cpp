@@ -107,7 +107,7 @@ void AssetHistoryDialog::loadOperations()
         qtyItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
         m_operationsTable->setItem(i, 2, qtyItem);
 
-        QTableWidgetItem *priceItem = new QTableWidgetItem(QString::number(op.price(), 'f', 2));
+        QTableWidgetItem *priceItem = new QTableWidgetItem(QString::number(op.price(), 'f', 6));
         priceItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
         m_operationsTable->setItem(i, 3, priceItem);
 

@@ -109,7 +109,7 @@ void AssetCard::setupUi()
     priceLayout->addWidget(m_currentPriceLabel);
 
     m_priceEdit = new QLineEdit(this);
-    m_priceEdit->setFixedWidth(70);
+    m_priceEdit->setFixedWidth(100);
     m_priceEdit->setStyleSheet(
         "font-size: 12px; font-weight: bold; color: #3498db; padding: 2px 4px; "
         "border: 1px solid #3498db; border-radius: 3px; background: white;"
@@ -191,8 +191,8 @@ void AssetCard::updateDisplay()
 {
     m_nameLabel->setText(m_asset.name());
     m_quantityLabel->setText(QString::number(m_asset.totalQuantity(), 'f', 2));
-    m_avgPriceLabel->setText(QString::number(m_asset.averageBuyPrice(), 'f', 2));
-    m_currentPriceLabel->setText(QString::number(m_asset.currentPrice(), 'f', 2));
+    m_avgPriceLabel->setText(QString::number(m_asset.averageBuyPrice(), 'f', 6));
+    m_currentPriceLabel->setText(QString::number(m_asset.currentPrice(), 'f', 6));
     m_valueLabel->setText(QString::number(m_asset.currentValue(), 'f', 2));
 
     double yieldPct = m_asset.yieldPercent();
@@ -254,7 +254,7 @@ void AssetCard::onDeleteClicked()
 void AssetCard::onPriceLabelClicked()
 {
     m_currentPriceLabel->hide();
-    m_priceEdit->setText(QString::number(m_asset.currentPrice(), 'f', 2));
+    m_priceEdit->setText(QString::number(m_asset.currentPrice(), 'f', 6));
     m_priceEdit->show();
     m_priceEdit->setFocus();
     m_priceEdit->selectAll();

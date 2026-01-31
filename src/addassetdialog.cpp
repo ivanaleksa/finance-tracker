@@ -84,13 +84,13 @@ void AddAssetDialog::setupUi()
     purchaseLayout->addRow("Количество:", m_quantitySpin);
 
     m_buyPriceSpin = new QDoubleSpinBox(this);
-    m_buyPriceSpin->setDecimals(2);
+    m_buyPriceSpin->setDecimals(6);
     m_buyPriceSpin->setRange(0.0, 999999999.99);
     m_buyPriceSpin->setButtonSymbols(QAbstractSpinBox::NoButtons);
     purchaseLayout->addRow("Цена покупки:", m_buyPriceSpin);
 
     m_currentPriceSpin = new QDoubleSpinBox(this);
-    m_currentPriceSpin->setDecimals(2);
+    m_currentPriceSpin->setDecimals(6);
     m_currentPriceSpin->setRange(0.0, 999999999.99);
     m_currentPriceSpin->setButtonSymbols(QAbstractSpinBox::NoButtons);
     purchaseLayout->addRow("Текущая цена:", m_currentPriceSpin);
