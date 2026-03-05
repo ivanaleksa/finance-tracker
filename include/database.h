@@ -5,17 +5,17 @@
 #include <QSqlDatabase>
 #include <QList>
 #include <QDate>
-#include "transaction.h"
-#include "category.h"
-#include "investmentcategory.h"
-#include "country.h"
-#include "currency.h"
-#include "snapshot.h"
-#include "snapshotposition.h"
-#include "withdrawal.h"
-#include "deposit.h"
-#include "portfolioasset.h"
-#include "assetoperation.h"
+#include "reporting/transaction.h"
+#include "reporting/category.h"
+#include "investment/investmentcategory.h"
+#include "investment/country.h"
+#include "investment/currency.h"
+#include "investment/snapshot.h"
+#include "investment/snapshotposition.h"
+#include "investment/withdrawal.h"
+#include "investment/deposit.h"
+#include "investment/portfolioasset.h"
+#include "investment/assetoperation.h"
 
 class Database : public QObject
 {
