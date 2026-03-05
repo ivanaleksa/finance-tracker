@@ -1,6 +1,7 @@
 #include "reporting/yearchartpage.h"
 #include "widgets/barchart.h"
 #include "database.h"
+#include "widgets/uiutils.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -54,11 +55,13 @@ void YearChartPage::setupUi()
     filterLayout->addWidget(m_yearSpin);
     
     filterLayout->addStretch();
+    UiUtils::applyShadow(filterWidget);
     mainLayout->addWidget(filterWidget);
     
     // charts
     m_chart = new BarChart(this);
     m_chart->setObjectName("chartWidget");
+    UiUtils::applyShadow(m_chart);
     mainLayout->addWidget(m_chart, 1);
 }
 

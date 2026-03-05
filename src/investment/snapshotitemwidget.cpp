@@ -4,7 +4,7 @@
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QPainter>
-#include <QGraphicsDropShadowEffect>
+#include "widgets/uiutils.h"
 #include <QMessageBox>
 
 SnapshotItemWidget::SnapshotItemWidget(const Snapshot& snapshot, QWidget *parent)
@@ -19,13 +19,7 @@ void SnapshotItemWidget::setupUi()
 {
     setObjectName("snapshotItem");
 
-    // Shadow effect
-    QGraphicsDropShadowEffect *shadow = new QGraphicsDropShadowEffect(this);
-    shadow->setBlurRadius(10);
-    shadow->setXOffset(0);
-    shadow->setYOffset(2);
-    shadow->setColor(QColor(0, 0, 0, 30));
-    setGraphicsEffect(shadow);
+    UiUtils::applyShadow(this);
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(0, 0, 0, 0);

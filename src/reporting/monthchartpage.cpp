@@ -1,6 +1,7 @@
 #include "reporting/monthchartpage.h"
 #include "widgets/piechart.h"
 #include "database.h"
+#include "widgets/uiutils.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -88,11 +89,13 @@ void MonthChartPage::setupUi()
     filterLayout->addWidget(m_categoryCombo);
 
     filterLayout->addStretch();
+    UiUtils::applyShadow(filterWidget);
     mainLayout->addWidget(filterWidget);
 
     // График
     m_chart = new PieChart(this);
     m_chart->setObjectName("chartWidget");
+    UiUtils::applyShadow(m_chart);
     mainLayout->addWidget(m_chart, 1);
 }
 

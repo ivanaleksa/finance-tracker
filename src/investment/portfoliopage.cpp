@@ -87,7 +87,7 @@ void PortfolioPage::setupUi()
     m_cardsContainer = new QWidget();
     m_cardsContainer->setStyleSheet("background: transparent;");
     m_cardsLayout = new QVBoxLayout(m_cardsContainer);
-    m_cardsLayout->setContentsMargins(0, 0, 0, 0);
+    m_cardsLayout->setContentsMargins(4, 4, 4, 4);
     m_cardsLayout->setSpacing(20);
     m_cardsLayout->addStretch();
 
@@ -194,7 +194,7 @@ void PortfolioPage::loadAssets()
 
             // Cards container for this category with flow layout (auto wrap)
             QWidget *cardsRow = new QWidget();
-            FlowLayout *rowLayout = new FlowLayout(cardsRow, 0, 15, 15);
+            FlowLayout *rowLayout = new FlowLayout(cardsRow, 8, 15, 15);
 
             // Create cards for each asset in this category
             for (const PortfolioAsset& asset : categoryAssets) {

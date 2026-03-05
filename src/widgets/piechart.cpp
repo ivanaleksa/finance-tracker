@@ -48,7 +48,13 @@ void PieChart::paintEvent(QPaintEvent *event)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    painter.fillRect(rect(), QColor("#ffffff"));
+    // rounded background (transparent corners → rounded shadow)
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(QColor(255, 255, 255));
+    painter.drawRoundedRect(rect(), 10, 10);
+    painter.setPen(QPen(QColor(0, 0, 0, 15), 1));
+    painter.setBrush(Qt::NoBrush);
+    painter.drawRoundedRect(rect().adjusted(0, 0, -1, -1), 10, 10);
 
     if (!m_title.isEmpty()) {
         painter.setPen(QColor("#2c3e50"));

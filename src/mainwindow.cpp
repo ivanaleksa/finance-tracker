@@ -14,7 +14,7 @@
 #include "config.h"
 #include <QFile>
 #include <QApplication>
-#include <QGraphicsDropShadowEffect>
+#include "widgets/uiutils.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -55,13 +55,7 @@ void MainWindow::createNavigationPanel()
     m_navPanel->setObjectName("navPanel");
     m_navPanel->setFixedWidth(220);
 
-    // Add drop shadow for "island" effect
-    QGraphicsDropShadowEffect *shadow = new QGraphicsDropShadowEffect(m_navPanel);
-    shadow->setBlurRadius(20);
-    shadow->setXOffset(4);
-    shadow->setYOffset(4);
-    shadow->setColor(QColor(0, 0, 0, 60));
-    m_navPanel->setGraphicsEffect(shadow);
+    UiUtils::applyShadow(m_navPanel);
 
     m_navLayout = new QVBoxLayout(m_navPanel);
     m_navLayout->setContentsMargins(12, 20, 12, 20);

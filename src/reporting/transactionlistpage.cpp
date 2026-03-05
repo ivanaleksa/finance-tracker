@@ -1,5 +1,6 @@
 #include "reporting/transactionlistpage.h"
 #include "database.h"
+#include "widgets/uiutils.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QHeaderView>
@@ -96,8 +97,9 @@ void TransactionListPage::setupUi()
     connect(m_clearFiltersBtn, &QPushButton::clicked, this, &TransactionListPage::onClearFiltersClicked);
     filterLayout->addWidget(m_clearFiltersBtn);
     
+    UiUtils::applyShadow(filterWidget);
     mainLayout->addWidget(filterWidget);
-    
+
     // table
     m_table = new QTableWidget(this);
     m_table->setObjectName("transactionTable");

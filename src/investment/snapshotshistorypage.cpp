@@ -36,7 +36,7 @@ void SnapshotsHistoryPage::setupUi()
     m_container = new QWidget();
     m_container->setStyleSheet("background: transparent;");
     m_containerLayout = new QVBoxLayout(m_container);
-    m_containerLayout->setContentsMargins(0, 0, 0, 0);
+    m_containerLayout->setContentsMargins(4, 4, 4, 4);
     m_containerLayout->setSpacing(15);
     m_containerLayout->addStretch();
 

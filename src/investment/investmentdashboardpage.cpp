@@ -1,10 +1,10 @@
 #include "investment/investmentdashboardpage.h"
 #include "database.h"
+#include "widgets/uiutils.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
 #include <QGroupBox>
-#include <QFrame>
 #include <QScrollArea>
 
 InvestmentDashboardPage::InvestmentDashboardPage(QWidget *parent)
@@ -52,11 +52,7 @@ void InvestmentDashboardPage::setupUi()
     summaryLayout->setSpacing(20);
 
     // Total value card
-    QFrame *valueCard = new QFrame(this);
-    valueCard->setObjectName("summaryCard");
-    valueCard->setStyleSheet(
-        "QFrame#summaryCard { background: white; border-radius: 10px; border: 1px solid #e0e0e0; }"
-    );
+    IslandWidget *valueCard = new IslandWidget(this);
     QVBoxLayout *valueLayout = new QVBoxLayout(valueCard);
     valueLayout->setContentsMargins(20, 15, 20, 15);
     QLabel *valueTitle = new QLabel("Стоимость портфеля", valueCard);
@@ -65,14 +61,11 @@ void InvestmentDashboardPage::setupUi()
     m_totalValueLabel->setStyleSheet("font-size: 24px; font-weight: bold; color: #2c3e50;");
     valueLayout->addWidget(valueTitle);
     valueLayout->addWidget(m_totalValueLabel);
+    UiUtils::applyShadow(valueCard);
     summaryLayout->addWidget(valueCard);
 
     // Invested card
-    QFrame *investedCard = new QFrame(this);
-    investedCard->setObjectName("summaryCard");
-    investedCard->setStyleSheet(
-        "QFrame#summaryCard { background: white; border-radius: 10px; border: 1px solid #e0e0e0; }"
-    );
+    IslandWidget *investedCard = new IslandWidget(this);
     QVBoxLayout *investedLayout = new QVBoxLayout(investedCard);
     investedLayout->setContentsMargins(20, 15, 20, 15);
     QLabel *investedTitle = new QLabel("Вложено", investedCard);
@@ -81,14 +74,11 @@ void InvestmentDashboardPage::setupUi()
     m_totalInvestedLabel->setStyleSheet("font-size: 24px; font-weight: bold; color: #3498db;");
     investedLayout->addWidget(investedTitle);
     investedLayout->addWidget(m_totalInvestedLabel);
+    UiUtils::applyShadow(investedCard);
     summaryLayout->addWidget(investedCard);
 
     // Profit card
-    QFrame *profitCard = new QFrame(this);
-    profitCard->setObjectName("summaryCard");
-    profitCard->setStyleSheet(
-        "QFrame#summaryCard { background: white; border-radius: 10px; border: 1px solid #e0e0e0; }"
-    );
+    IslandWidget *profitCard = new IslandWidget(this);
     QVBoxLayout *profitLayout = new QVBoxLayout(profitCard);
     profitLayout->setContentsMargins(20, 15, 20, 15);
     QLabel *profitTitle = new QLabel("Прибыль", profitCard);
@@ -97,14 +87,11 @@ void InvestmentDashboardPage::setupUi()
     m_totalProfitLabel->setStyleSheet("font-size: 24px; font-weight: bold; color: #27ae60;");
     profitLayout->addWidget(profitTitle);
     profitLayout->addWidget(m_totalProfitLabel);
+    UiUtils::applyShadow(profitCard);
     summaryLayout->addWidget(profitCard);
 
     // Yield card
-    QFrame *yieldCard = new QFrame(this);
-    yieldCard->setObjectName("summaryCard");
-    yieldCard->setStyleSheet(
-        "QFrame#summaryCard { background: white; border-radius: 10px; border: 1px solid #e0e0e0; }"
-    );
+    IslandWidget *yieldCard = new IslandWidget(this);
     QVBoxLayout *yieldLayout = new QVBoxLayout(yieldCard);
     yieldLayout->setContentsMargins(20, 15, 20, 15);
     QLabel *yieldTitle = new QLabel("Доходность", yieldCard);
@@ -113,6 +100,7 @@ void InvestmentDashboardPage::setupUi()
     m_profitPercentLabel->setStyleSheet("font-size: 24px; font-weight: bold; color: #27ae60;");
     yieldLayout->addWidget(yieldTitle);
     yieldLayout->addWidget(m_profitPercentLabel);
+    UiUtils::applyShadow(yieldCard);
     summaryLayout->addWidget(yieldCard);
 
     mainLayout->addLayout(summaryLayout);
@@ -127,14 +115,11 @@ void InvestmentDashboardPage::setupUi()
     QWidget *chartsContainer = new QWidget();
     chartsContainer->setStyleSheet("background: transparent;");
     QVBoxLayout *chartsLayout = new QVBoxLayout(chartsContainer);
-    chartsLayout->setContentsMargins(0, 0, 0, 0);
+    chartsLayout->setContentsMargins(8, 4, 8, 4);
     chartsLayout->setSpacing(20);
 
     // Bar chart section
-    QFrame *barChartFrame = new QFrame(chartsContainer);
-    barChartFrame->setStyleSheet(
-        "QFrame { background: white; border-radius: 10px; border: 1px solid #e0e0e0; }"
-    );
+    IslandWidget *barChartFrame = new IslandWidget(chartsContainer);
     QVBoxLayout *barChartLayout = new QVBoxLayout(barChartFrame);
     barChartLayout->setContentsMargins(15, 15, 15, 15);
 
@@ -161,13 +146,11 @@ void InvestmentDashboardPage::setupUi()
     m_barChart->setMinimumHeight(500);
     barChartLayout->addWidget(m_barChart, 1);
 
+    UiUtils::applyShadow(barChartFrame);
     chartsLayout->addWidget(barChartFrame);
 
     // Pie chart section
-    QFrame *pieChartFrame = new QFrame(chartsContainer);
-    pieChartFrame->setStyleSheet(
-        "QFrame { background: white; border-radius: 10px; border: 1px solid #e0e0e0; }"
-    );
+    IslandWidget *pieChartFrame = new IslandWidget(chartsContainer);
     QVBoxLayout *pieChartLayout = new QVBoxLayout(pieChartFrame);
     pieChartLayout->setContentsMargins(15, 15, 15, 15);
 
@@ -191,6 +174,7 @@ void InvestmentDashboardPage::setupUi()
     m_pieChart->setMinimumHeight(500);
     pieChartLayout->addWidget(m_pieChart, 1);
 
+    UiUtils::applyShadow(pieChartFrame);
     chartsLayout->addWidget(pieChartFrame);
     chartsLayout->addStretch();
 

@@ -2,7 +2,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QPainter>
-#include <QGraphicsDropShadowEffect>
+#include "widgets/uiutils.h"
 #include <QMouseEvent>
 #include <QEvent>
 
@@ -19,13 +19,7 @@ void CurrencyCard::setupUi()
     setFixedSize(200, 120);
     setObjectName("currencyCard");
 
-    // Shadow effect
-    QGraphicsDropShadowEffect *shadow = new QGraphicsDropShadowEffect(this);
-    shadow->setBlurRadius(15);
-    shadow->setXOffset(0);
-    shadow->setYOffset(2);
-    shadow->setColor(QColor(0, 0, 0, 40));
-    setGraphicsEffect(shadow);
+    UiUtils::applyShadow(this);
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(15, 12, 15, 15);

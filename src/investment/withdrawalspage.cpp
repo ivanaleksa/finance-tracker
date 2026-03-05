@@ -1,6 +1,7 @@
 #include "investment/withdrawalspage.h"
 #include "investment/withdrawalundonotification.h"
 #include "database.h"
+#include "widgets/uiutils.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFormLayout>
@@ -80,6 +81,7 @@ void WithdrawalsPage::setupUi()
     connect(m_addBtn, &QPushButton::clicked, this, &WithdrawalsPage::onAddClicked);
     formLayout->addWidget(m_addBtn);
 
+    UiUtils::applyShadow(formWidget);
     mainLayout->addWidget(formWidget);
 
     // Table

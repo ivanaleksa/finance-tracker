@@ -1,5 +1,6 @@
 #include "reporting/dashboardpage.h"
 #include "database.h"
+#include "widgets/uiutils.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
@@ -52,6 +53,7 @@ void DashboardPage::setupUi()
     periodLayout->addWidget(m_yearSpin);
     
     periodLayout->addStretch();
+    UiUtils::applyShadow(periodWidget);
     mainLayout->addWidget(periodWidget);
     
     // statistic
@@ -91,6 +93,7 @@ QWidget* DashboardPage::createStatCard(const QString& title, QLabel*& valueLabel
     QFrame *card = new QFrame(this);
     card->setObjectName("statCard");
     card->setStyleSheet(QString("QFrame#statCard { border-left: 4px solid %1; }").arg(color));
+    UiUtils::applyShadow(card);
     
     QVBoxLayout *layout = new QVBoxLayout(card);
     layout->setContentsMargins(25, 20, 25, 20);

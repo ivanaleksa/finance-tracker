@@ -2,6 +2,7 @@
 #include "reporting/undonotification.h"
 #include "reporting/categorymanagerdialog.h"
 #include "database.h"
+#include "widgets/uiutils.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFormLayout>
@@ -116,6 +117,7 @@ void AddTransactionPage::setupUi()
     m_amountSpin->setButtonSymbols(QAbstractSpinBox::NoButtons);
     formLayout->addRow("Сумма:", m_amountSpin);
 
+    UiUtils::applyShadow(formGroup);
     mainLayout->addWidget(formGroup);
 
     // add button

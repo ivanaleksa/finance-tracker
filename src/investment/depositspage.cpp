@@ -1,6 +1,7 @@
 #include "investment/depositspage.h"
 #include "investment/depositundonotification.h"
 #include "database.h"
+#include "widgets/uiutils.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFormLayout>
@@ -80,6 +81,7 @@ void DepositsPage::setupUi()
     connect(m_addBtn, &QPushButton::clicked, this, &DepositsPage::onAddClicked);
     formLayout->addWidget(m_addBtn);
 
+    UiUtils::applyShadow(formWidget);
     mainLayout->addWidget(formWidget);
 
     // Table

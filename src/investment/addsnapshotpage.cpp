@@ -3,6 +3,7 @@
 #include "investment/investmentcategorymanagerdialog.h"
 #include "investment/countrymanagerdialog.h"
 #include "database.h"
+#include "widgets/uiutils.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGroupBox>
@@ -69,6 +70,7 @@ void AddSnapshotPage::setupUi()
     m_descriptionEdit->setPlaceholderText("Необязательно");
     headerLayout->addWidget(m_descriptionEdit, 1);
 
+    UiUtils::applyShadow(headerWidget);
     contentLayout->addWidget(headerWidget);
 
     // === Currency rates section ===
@@ -161,6 +163,7 @@ void AddSnapshotPage::setupUi()
     connect(m_saveBtn, &QPushButton::clicked, this, &AddSnapshotPage::onSaveClicked);
     footerLayout->addWidget(m_saveBtn);
 
+    UiUtils::applyShadow(footerWidget);
     mainLayout->addWidget(footerWidget);
 
     // Undo notification
