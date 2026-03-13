@@ -14,5 +14,10 @@
         <file>icons/sidebar/list.svg</file>
         <file>icons/sidebar/plus.svg</file>
         <file>icons/sidebar/trending-up.svg</file>
+        
+        <file>icons/utility/settings.svg</file>
+        <file>icons/utility/trash.svg</file>
+        <file>icons/utility/chevron-down.svg</file>
+        <file>icons/utility/chevron-up.svg</file>
     </qresource>
 </RCC>

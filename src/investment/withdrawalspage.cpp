@@ -138,7 +138,9 @@ void WithdrawalsPage::loadWithdrawals()
 
         m_table->setItem(i, 2, new QTableWidgetItem(w.comment()));
 
-        QPushButton *deleteBtn = new QPushButton("🗑", this);
+        QPushButton *deleteBtn = new QPushButton("", this);
+        deleteBtn->setIcon(QIcon(":/icons/utility/trash.svg"));
+        deleteBtn->setIconSize(QSize(20, 20));
         deleteBtn->setToolTip("Удалить вывод");
         deleteBtn->setObjectName("deleteButton");
         deleteBtn->setCursor(Qt::PointingHandCursor);

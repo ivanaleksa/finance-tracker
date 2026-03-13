@@ -77,7 +77,9 @@ void AddTransactionPage::setupUi()
             this, &AddTransactionPage::onCategoryChanged);
     categoryLayout->addWidget(m_categoryCombo);
 
-    m_categorySettingsBtn = new QPushButton("⚙", this);
+    m_categorySettingsBtn = new QPushButton("", this);
+    m_categorySettingsBtn->setIcon(QIcon(":/icons/utility/settings.svg"));
+    m_categorySettingsBtn->setIconSize(QSize(20, 20));
     m_categorySettingsBtn->setObjectName("settingsBtn");
     m_categorySettingsBtn->setFixedSize(32, 32);
     m_categorySettingsBtn->setCursor(Qt::PointingHandCursor);
@@ -95,7 +97,9 @@ void AddTransactionPage::setupUi()
     m_subcategoryCombo->setMinimumWidth(180);
     categoryLayout->addWidget(m_subcategoryCombo);
 
-    m_subcategorySettingsBtn = new QPushButton("⚙", this);
+    m_subcategorySettingsBtn = new QPushButton("", this);
+    m_subcategorySettingsBtn->setIcon(QIcon(":/icons/utility/settings.svg"));
+    m_subcategorySettingsBtn->setIconSize(QSize(20, 20));
     m_subcategorySettingsBtn->setObjectName("settingsBtn");
     m_subcategorySettingsBtn->setFixedSize(32, 32);
     m_subcategorySettingsBtn->setCursor(Qt::PointingHandCursor);

@@ -191,7 +191,9 @@ void TransactionListPage::loadTransactions()
         amountItem->setForeground(typeColor);
         m_table->setItem(i, 4, amountItem);
         
-        QPushButton *deleteBtn = new QPushButton("🗑", this);
+        QPushButton *deleteBtn = new QPushButton("", this);
+        deleteBtn->setIcon(QIcon(":/icons/utility/trash.svg"));
+        deleteBtn->setIconSize(QSize(20, 20));
         deleteBtn->setToolTip("Удалить запись");
         deleteBtn->setObjectName("deleteButton");
         deleteBtn->setCursor(Qt::PointingHandCursor);

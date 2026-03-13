@@ -61,7 +61,9 @@ void SnapshotItemWidget::setupUi()
     headerLayout->addWidget(m_totalLabel);
 
     // Delete button
-    m_deleteBtn = new QPushButton("🗑", this);
+    QPushButton *m_deleteBtn = new QPushButton("", this);
+    m_deleteBtn->setIcon(QIcon(":/icons/utility/trash.svg"));
+    m_deleteBtn->setIconSize(QSize(20, 20));
     m_deleteBtn->setFixedSize(30, 30);
     m_deleteBtn->setCursor(Qt::PointingHandCursor);
     m_deleteBtn->setStyleSheet(
@@ -73,7 +75,9 @@ void SnapshotItemWidget::setupUi()
     headerLayout->addWidget(m_deleteBtn);
 
     // Expand button
-    m_expandBtn = new QPushButton("▼", this);
+    m_expandBtn = new QPushButton("", this);
+    m_expandBtn->setIcon(QIcon(":/icons/utility/chevron-down.svg"));
+    m_expandBtn->setIconSize(QSize(20, 20));
     m_expandBtn->setFixedSize(30, 30);
     m_expandBtn->setCursor(Qt::PointingHandCursor);
     m_expandBtn->setStyleSheet(
@@ -247,7 +251,7 @@ void SnapshotItemWidget::toggleExpanded()
 void SnapshotItemWidget::updateExpandedState()
 {
     m_contentWidget->setVisible(m_expanded);
-    m_expandBtn->setText(m_expanded ? "▲" : "▼");
+    m_expandBtn->setIcon(m_expanded ? QIcon(":/icons/utility/chevron-up.svg") : QIcon(":/icons/utility/chevron-down.svg"));
 }
 
 void SnapshotItemWidget::onDeleteClicked()
