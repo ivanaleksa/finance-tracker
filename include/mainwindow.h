@@ -51,6 +51,8 @@ private slots:
     void switchToReportingMode();
     void switchToInvestmentsMode();
 
+    QPushButton* createSidebarButton(const QString& text, const QString& icon, QWidget* parent);
+
 private:
     void setupUi();
     void createNavigationPanel();

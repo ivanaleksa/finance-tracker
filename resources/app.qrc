@@ -1,7 +1,18 @@
 <RCC>
     <qresource prefix="/">
         <file>icons/app.png</file>
+        
         <file>fonts/Ubuntu-Regular.ttf</file>
         <file>fonts/Ubuntu-Bold.ttf</file>
+        
+        <file>icons/sidebar/arrow-down.svg</file>
+        <file>icons/sidebar/arrow-up.svg</file>
+        <file>icons/sidebar/briefcase.svg</file>
+        <file>icons/sidebar/camera.svg</file>
+        <file>icons/sidebar/chart-pie.svg</file>
+        <file>icons/sidebar/dashboard.svg</file>
+        <file>icons/sidebar/list.svg</file>
+        <file>icons/sidebar/plus.svg</file>
+        <file>icons/sidebar/trending-up.svg</file>
     </qresource>
 </RCC>

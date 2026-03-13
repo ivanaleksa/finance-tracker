@@ -120,31 +120,31 @@ void MainWindow::createReportingButtons()
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(5);
 
-    m_btnDashboard = new QPushButton("📊 Обзор", m_reportingButtonsContainer);
+    m_btnDashboard = createSidebarButton("Обзор", ":/icons/sidebar/dashboard.svg", m_reportingButtonsContainer);
     m_btnDashboard->setObjectName("navButton");
     m_btnDashboard->setCursor(Qt::PointingHandCursor);
     connect(m_btnDashboard, &QPushButton::clicked, this, &MainWindow::showDashboard);
     layout->addWidget(m_btnDashboard);
 
-    m_btnAddTransaction = new QPushButton("➕ Добавить", m_reportingButtonsContainer);
+    m_btnAddTransaction = createSidebarButton("Добавить", ":/icons/sidebar/plus.svg", m_reportingButtonsContainer);
     m_btnAddTransaction->setObjectName("navButton");
     m_btnAddTransaction->setCursor(Qt::PointingHandCursor);
     connect(m_btnAddTransaction, &QPushButton::clicked, this, &MainWindow::showAddTransaction);
     layout->addWidget(m_btnAddTransaction);
 
-    m_btnTransactionList = new QPushButton("📋 История", m_reportingButtonsContainer);
+    m_btnTransactionList = createSidebarButton("История", ":/icons/sidebar/list.svg", m_reportingButtonsContainer);
     m_btnTransactionList->setObjectName("navButton");
     m_btnTransactionList->setCursor(Qt::PointingHandCursor);
     connect(m_btnTransactionList, &QPushButton::clicked, this, &MainWindow::showTransactionList);
     layout->addWidget(m_btnTransactionList);
 
-    m_btnMonthChart = new QPushButton("🥧 По категориям", m_reportingButtonsContainer);
+    m_btnMonthChart = createSidebarButton("По категориям", ":/icons/sidebar/chart-pie.svg", m_reportingButtonsContainer);
     m_btnMonthChart->setObjectName("navButton");
     m_btnMonthChart->setCursor(Qt::PointingHandCursor);
     connect(m_btnMonthChart, &QPushButton::clicked, this, &MainWindow::showMonthChart);
     layout->addWidget(m_btnMonthChart);
 
-    m_btnYearChart = new QPushButton("📈 По месяцам", m_reportingButtonsContainer);
+    m_btnYearChart = createSidebarButton("По месяцам", ":/icons/sidebar/trending-up.svg", m_reportingButtonsContainer);
     m_btnYearChart->setObjectName("navButton");
     m_btnYearChart->setCursor(Qt::PointingHandCursor);
     connect(m_btnYearChart, &QPushButton::clicked, this, &MainWindow::showYearChart);
@@ -158,31 +158,31 @@ void MainWindow::createInvestmentsButtons()
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(5);
 
-    m_btnInvestmentDashboard = new QPushButton("📊 Обзор", m_investmentsButtonsContainer);
+    m_btnInvestmentDashboard = createSidebarButton("Обзор", ":/icons/sidebar/dashboard.svg", m_investmentsButtonsContainer);
     m_btnInvestmentDashboard->setObjectName("navButton");
     m_btnInvestmentDashboard->setCursor(Qt::PointingHandCursor);
     connect(m_btnInvestmentDashboard, &QPushButton::clicked, this, &MainWindow::showInvestmentDashboard);
     layout->addWidget(m_btnInvestmentDashboard);
 
-    m_btnPortfolio = new QPushButton("💼 Портфель", m_investmentsButtonsContainer);
+    m_btnPortfolio = createSidebarButton("Портфель", ":/icons/sidebar/briefcase.svg", m_investmentsButtonsContainer);
     m_btnPortfolio->setObjectName("navButton");
     m_btnPortfolio->setCursor(Qt::PointingHandCursor);
     connect(m_btnPortfolio, &QPushButton::clicked, this, &MainWindow::showPortfolio);
     layout->addWidget(m_btnPortfolio);
 
-    m_btnSnapshotsHistory = new QPushButton("📸 Снимки", m_investmentsButtonsContainer);
+    m_btnSnapshotsHistory = createSidebarButton("Снимки", ":/icons/sidebar/camera.svg", m_investmentsButtonsContainer);
     m_btnSnapshotsHistory->setObjectName("navButton");
     m_btnSnapshotsHistory->setCursor(Qt::PointingHandCursor);
     connect(m_btnSnapshotsHistory, &QPushButton::clicked, this, &MainWindow::showSnapshotsHistory);
     layout->addWidget(m_btnSnapshotsHistory);
 
-    m_btnWithdrawals = new QPushButton("💸 Выводы", m_investmentsButtonsContainer);
+    m_btnWithdrawals = createSidebarButton("Выводы", ":/icons/sidebar/arrow-up.svg", m_investmentsButtonsContainer);
     m_btnWithdrawals->setObjectName("navButton");
     m_btnWithdrawals->setCursor(Qt::PointingHandCursor);
     connect(m_btnWithdrawals, &QPushButton::clicked, this, &MainWindow::showWithdrawals);
     layout->addWidget(m_btnWithdrawals);
 
-    m_btnDeposits = new QPushButton("💰 Пополнения", m_investmentsButtonsContainer);
+    m_btnDeposits = createSidebarButton("Пополнения", ":/icons/sidebar/arrow-down.svg", m_investmentsButtonsContainer);
     m_btnDeposits->setObjectName("navButton");
     m_btnDeposits->setCursor(Qt::PointingHandCursor);
     connect(m_btnDeposits, &QPushButton::clicked, this, &MainWindow::showDeposits);
@@ -245,6 +245,17 @@ void MainWindow::createPages()
     connect(&Database::instance(), &Database::dataChanged, m_transactionListPage, &TransactionListPage::refreshData);
     connect(&Database::instance(), &Database::dataChanged, m_monthChartPage, &MonthChartPage::refreshChart);
     connect(&Database::instance(), &Database::dataChanged, m_yearChartPage, &YearChartPage::refreshChart);
+}
+
+QPushButton* MainWindow::createSidebarButton(
+    const QString& text,
+    const QString& icon,
+    QWidget* parent)
+{
+    QPushButton* btn = new QPushButton(text, parent);
+    btn->setIcon(QIcon(icon));
+    btn->setIconSize(QSize(20, 20));
+    return btn;
 }
 
 void MainWindow::setActiveButton(QPushButton* button)
