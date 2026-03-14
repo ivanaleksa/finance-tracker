@@ -11,7 +11,7 @@ class BarChart : public QWidget
 
 public:
     explicit BarChart(QWidget *parent = nullptr);
-    
+
     void setData(const QMap<int, double>& data);
     void setTitle(const QString& title);
     void setBarColor(const QColor& color);
@@ -20,15 +20,28 @@ public:
 
 protected:
     void paintEvent(QPaintEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void leaveEvent(QEvent *event) override;
 
 private:
+    struct BarInfo {
+        QRect rect;
+        QString label;
+        double value;
+    };
+
+    void drawBars(QPainter& painter, const QRect& rect);
+    void drawAxes(QPainter& painter, const QRect& rect, double maxValue);
+    void drawTooltip(QPainter& painter, const BarInfo& bar);
+    int  hitTestBar(const QPoint& pos) const;
+
     QMap<int, double> m_data;
     QString m_title;
     QColor m_barColor;
     QStringList m_labels;
-    
-    void drawBars(QPainter& painter, const QRect& rect);
-    void drawAxes(QPainter& painter, const QRect& rect, double maxValue);
+
+    QList<BarInfo> m_bars;
+    int m_hoveredIndex = -1;
 };
 
 #endif // BARCHART_H
