@@ -20,8 +20,6 @@ inline void applyShadow(QWidget *widget)
 
 } // namespace UiUtils
 
-// Базовый виджет-остров: рисует скруглённый белый фон в paintEvent,
-// оставляя углы прозрачными — тень QGraphicsDropShadowEffect получается скруглённой.
 class IslandWidget : public QWidget
 {
 public:
