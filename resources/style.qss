@@ -353,3 +353,18 @@ QMessageBox QPushButton {
     padding: 8px 16px;
     border-radius: 6px;
 }
+
+CategoryComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 20px;
+    border-left: 1px solid #ccc;
+}
+
+CategoryComboBox::down-arrow {
+    image: url(:/icons/utility/chevron-down.svg);
+}
+
+CategoryComboBox[popupOpen="true"]::down-arrow {
+    image: url(:/icons/utility/chevron-up.svg);
+}

@@ -43,6 +43,10 @@ void CategoryComboBox::loadCategories(bool includeAll)
         QStandardItem *allItem = new QStandardItem("Все категории");
         allItem->setData(-1, Qt::UserRole);
         m_sourceModel->appendRow(allItem);
+    } else {
+        QStandardItem *emptyItem = new QStandardItem();
+        emptyItem->setData(-1, Qt::UserRole);
+        m_sourceModel->appendRow(emptyItem);
     }
 
     QList<Category> categories = Database::instance().getCategories();
@@ -52,9 +56,8 @@ void CategoryComboBox::loadCategories(bool includeAll)
         m_sourceModel->appendRow(item);
     }
 
-    if (m_sourceModel->rowCount() > 0) {
-        setCurrentIndex(0);
-    }
+    setCurrentIndex(0);
+    m_lineEdit->clear();
 }
 
 void CategoryComboBox::loadSubcategories(int parentCategoryId)
@@ -125,4 +128,21 @@ void CategoryComboBox::onItemActivated(const QModelIndex& index)
 {
     int categoryId = index.data(Qt::UserRole).toInt();
     emit categorySelected(categoryId);
+}
+
+void CategoryComboBox::showPopup()
+{
+    setStyleSheet(styleSheet().replace("down-arrow.svg", "up-arrow.svg"));
+    setProperty("popupOpen", true);
+    style()->unpolish(this);
+    style()->polish(this);
+    QComboBox::showPopup();
+}
+
+void CategoryComboBox::hidePopup()
+{
+    setProperty("popupOpen", false);
+    style()->unpolish(this);
+    style()->polish(this);
+    QComboBox::hidePopup();
 }

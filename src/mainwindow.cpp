@@ -31,7 +31,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::setupUi()
 {
-    setWindowTitle("Учёт финансов");
+    setWindowTitle("AlexFinance");
     setMinimumSize(1200, 700);
     resize(1200, 700);
 

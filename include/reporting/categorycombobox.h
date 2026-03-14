@@ -23,6 +23,10 @@ public:
 signals:
     void categorySelected(int categoryId);
 
+protected:
+    void showPopup() override;
+    void hidePopup() override;
+
 private slots:
     void onTextChanged(const QString& text);
     void onItemActivated(const QModelIndex& index);
